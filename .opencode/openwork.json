@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "CardBid",
+    "createdAt": 1778755415196,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "C:\\Users\\josef\\Documents\\Open_Work\\CardBid"
+  ],
+  "reload": null
+}

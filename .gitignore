@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dev.db
+*.db
+logs/
+.env
+.env.local
+.env.production
+server/.env
+client/.env
+server/data/
+coverage/
+uploads/
+*.log
+.DS_Store

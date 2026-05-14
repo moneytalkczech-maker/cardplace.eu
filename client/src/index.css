@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #050A12;
+  --bg-card: #0B1220;
+  --bg-card-light: #111B2E;
+  --primary-blue: #009DFF;
+  --neon-blue: #00C8FF;
+  --primary-green: #A7FF00;
+  --neon-green: #7CFF00;
+  --text-main: #FFFFFF;
+  --text-muted: #9CA3AF;
+  --border-glow: rgba(0, 200, 255, 0.35);
+  --green-glow: rgba(124, 255, 0, 0.45);
+}
+
+@layer base {
+  body {
+    @apply bg-[#050A12] text-white antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Rajdhani", sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: "Rajdhani", sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    @apply btn text-[#050A12];
+    background: linear-gradient(135deg, #A7FF00, #5CFF00);
+    box-shadow: 0 0 24px rgba(124, 255, 0, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 40px rgba(124, 255, 0, 0.55);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 0 20px rgba(124, 255, 0, 0.3);
+  }
+
+  .btn-secondary {
+    @apply btn;
+    background: transparent;
+    border: 1.5px solid #00C8FF;
+    color: #00C8FF;
+  }
+  .btn-secondary:hover {
+    background: rgba(0, 200, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.25);
+  }
+
+  .btn-ghost {
+    @apply btn text-gray-400;
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    @apply text-white;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-danger {
+    @apply btn text-white;
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+
+  .input {
+    @apply w-full rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-all duration-200;
+    background: #111B2E;
+    border: 1.5px solid rgba(0, 200, 255, 0.15);
+  }
+  .input:focus {
+    outline: none;
+    border-color: #00C8FF;
+    box-shadow: 0 0 12px rgba(0, 200, 255, 0.2);
+  }
+
+  .card {
+    @apply rounded-xl p-4 transition-all duration-300;
+    background: #0B1220;
+    border: 1px solid rgba(0, 200, 255, 0.1);
+  }
+  .card:hover {
+    border-color: rgba(0, 200, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 200, 255, 0.08);
+  }
+
+  .card-premium {
+    @apply card;
+    border-color: rgba(167, 255, 0, 0.25);
+    box-shadow: 0 0 24px rgba(124, 255, 0, 0.1);
+  }
+  .card-premium:hover {
+    border-color: rgba(167, 255, 0, 0.5);
+    box-shadow: 0 0 40px rgba(124, 255, 0, 0.2);
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold;
+    font-family: "Rajdhani", sans-serif;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-green {
+    @apply badge;
+    background: rgba(167, 255, 0, 0.15);
+    color: #A7FF00;
+    border: 1px solid rgba(167, 255, 0, 0.3);
+  }
+
+  .badge-red {
+    @apply badge;
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .badge-yellow {
+    @apply badge;
+    background: rgba(251, 191, 36, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+  .badge-blue {
+    @apply badge;
+    background: rgba(0, 200, 255, 0.15);
+    color: #00C8FF;
+    border: 1px solid rgba(0, 200, 255, 0.3);
+  }
+
+  /* Neon text */
+  .text-neon-green {
+    color: #A7FF00;
+    text-shadow: 0 0 20px rgba(124, 255, 0, 0.4);
+  }
+
+  .text-neon-blue {
+    color: #00C8FF;
+    text-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #00C8FF, #A7FF00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Premium glow box */
+  .glow-green {
+    box-shadow: 0 0 30px rgba(124, 255, 0, 0.15);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 30px rgba(0, 200, 255, 0.15);
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: rgba(11, 18, 32, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 200, 255, 0.1);
+  }
+}
+
+/* Custom scrollbar - neon style */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050A12;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 200, 255, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 200, 255, 0.5);
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}

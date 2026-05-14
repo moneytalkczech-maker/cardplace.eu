@@ -1,0 +1,29 @@
+[Unit]
+Description=CardBid Server
+After=network.target
+
+[Service]
+Type=simple
+User=cardbid
+WorkingDirectory=/opt/cardbid/server
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=4000
+Environment=JWT_SECRET=<%= jwt_secret %>
+Environment=REFRESH_TOKEN_SECRET=<%= refresh_secret %>
+Environment=CORS_ORIGIN=https://<%= domain %>
+Environment=DATABASE_URL=file:./data/prod.db
+Environment=LOG_LEVEL=info
+Environment=SENTRY_DSN=<%= sentry_dsn %>
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/cardbid/server/data
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  username          String       @unique
+  password          String
+  role              String       @default("BUYER")
+  avatarUrl         String?
+  trustScore        Int          @default(0)
+  totalSales        Int          @default(0)
+  credits           Int          @default(3)
+  verified          Boolean      @default(false)
+  stripeCustomerId  String?      @unique
+  lastDailyCredit   DateTime?
+  createdAt         DateTime     @default(now())
+  auctions          Auction[]
+  bids              Bid[]
+  watchlists        Watchlist[]
+  notifications     Notification[]
+  transactions      Transaction[] @relation("BuyerTransactions")
+  sales             Transaction[] @relation("SellerTransactions")
+  referrals         Referral[]   @relation("Referrer")
+  referred          Referral[]   @relation("Referred")
+  wantedCards       WantedCard[]
+  collection        CollectionItem[]
+  followers         Follow[]   @relation("Following")
+  following         Follow[]   @relation("FollowedBy")
+  reviewsGiven      Review[]   @relation("Reviewer")
+  reviewsReceived   Review[]   @relation("Reviewed")
+}
+
+model Card {
+  id             String    @id @default(cuid())
+  name           String
+  setName        String
+  setCode        String
+  cardNumber     String?
+  rarity         String?
+  imageUrl       String?
+  estimatedPrice Float?
+  auctions       Auction[]
+}
+
+model Auction {
+  id            String     @id @default(cuid())
+  title         String
+  description   String?
+  imageUrl      String?
+  startingPrice Float
+  currentPrice  Float
+  minIncrement  Float      @default(1)
+  endTime       DateTime
+  status        String     @default("ACTIVE")
+  featured      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  userId        String
+  cardId        String?
+  user          User       @relation(fields: [userId], references: [id])
+  card          Card?      @relation(fields: [cardId], references: [id])
+  bids          Bid[]
+  watchlists    Watchlist[]
+  transaction   Transaction?
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  createdAt DateTime @default(now())
+  userId    String
+  auctionId String
+  user      User     @relation(fields: [userId], references: [id])
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  auctionId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  @@unique([userId, auctionId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  link      String?
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id                   String         @id @default(cuid())
+  amount               Float
+  status               String         @default("PENDING")
+  stripePaymentIntentId String?
+  stripeSessionId      String?
+  createdAt            DateTime       @default(now())
+  auctionId            String         @unique
+  buyerId              String
+  sellerId             String
+  auction              Auction        @relation(fields: [auctionId], references: [id])
+  buyer                User           @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  seller               User           @relation("SellerTransactions", fields: [sellerId], references: [id])
+  review               Review?
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+  transactionId String @unique
+  reviewerId  String
+  reviewedId  String
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewed    User     @relation("Reviewed", fields: [reviewedId], references: [id])
+}
+
+model CollectionItem {
+  id            String   @id @default(cuid())
+  userId        String
+  cardId        String
+  cardName      String
+  cardSet       String
+  cardRarity    String?
+  cardImage     String?
+  quantity      Int      @default(1)
+  purchasePrice Float?
+  condition     String   @default("NM")
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("FollowedBy", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+  @@unique([followerId, followingId])
+}
+
+model WantedCard {
+  id          String   @id @default(cuid())
+  userId      String
+  cardId      String
+  cardName    String
+  cardSet     String
+  description String?
+  maxPrice    Float?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  referrerId  String
+  referredId  String?
+  rewardGiven Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  referrer    User     @relation("Referrer", fields: [referrerId], references: [id])
+  referred    User?    @relation("Referred", fields: [referredId], references: [id])
+}
