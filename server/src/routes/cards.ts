@@ -10,5 +10,6 @@ router.post("/sync", authenticate, asyncHandler(cardController.sync));
 router.get("/sets", asyncHandler(cardController.sets));
 router.get("/price-history", asyncHandler(cardController.priceHistory));
 router.get("/similar", asyncHandler(cardController.similarCards));
+router.get("/detect-category", asyncHandler(cardController.detect));
 
 export default router;

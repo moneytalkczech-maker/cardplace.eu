@@ -48,6 +48,7 @@ model Card {
   name           String
   setName        String
   setCode        String
+  category       String    @default("pokemon")
   cardNumber     String?
   rarity         String?
   imageUrl       String?

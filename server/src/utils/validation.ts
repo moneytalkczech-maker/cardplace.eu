@@ -95,7 +95,7 @@ export const completeTransactionSchema = z.object({
 export const auctionQuerySchema = z.object({
   status: z.string().optional(),
   search: z.string().optional(),
-  category: z.string().optional(),
+  category: z.enum(["pokemon", "magic", "yugioh", "sports", "other"]).optional(),
   sort: z.enum(["ending", "price-asc", "price-desc", "trending"]).optional(),
 });
 

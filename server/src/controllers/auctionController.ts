@@ -31,12 +31,15 @@ async function notifyFollowers(auctionId: string, userId: string, title: string)
 }
 
 export async function list(req: AuthRequest, res: Response) {
-  const { status, search, sort, cursor, take = 20 } = req.query as any;
-  const cacheKey = `auctions:list:${cursor || ""}:${take}:${status || ""}:${search || ""}:${sort || ""}`;
+  const { status, search, sort, category, cursor, take = 20 } = req.query as any;
+  const cacheKey = `auctions:list:${cursor || ""}:${take}:${status || ""}:${search || ""}:${sort || ""}:${category || ""}`;
   const cached = await cacheGet(cacheKey);
   if (cached) return res.json(cached);
   const where: Prisma.AuctionWhereInput = {};
   if (status) where.status = status;
+  if (category) {
+    where.card = { category };
+  }
   if (search) {
     where.OR = [
       { title: { contains: search } },

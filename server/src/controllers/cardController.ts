@@ -1,44 +1,53 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
-import { ALL_SERVER_CARDS, searchServerCards } from "../data/cards";
 import { AppError } from "../middleware/errorHandler";
+import { searchCards, findCard, getSets, detectCategory } from "../utils/cardLookup";
 
 export async function search(req: Request, res: Response) {
-  const { q } = req.query;
-  if (!q || typeof q !== "string") {
-    res.json(ALL_SERVER_CARDS.slice(0, 50));
-    return;
-  }
-  const results = searchServerCards(q).slice(0, 50);
+  const { q, category } = req.query;
+  const query = (q as string) || "";
+  const cat = (category as string) || undefined;
+
+  const results = await searchCards(
+    query,
+    cat as any,
+  );
   res.json(results);
 }
 
 export async function sync(_req: Request, res: Response) {
-  for (const card of ALL_SERVER_CARDS) {
+  const allCards = await searchCards("", "pokemon");
+  let synced = 0;
+  for (const card of allCards) {
     await prisma.card.upsert({
       where: { id: card.cardNumber },
       update: {
-        name: card.name, setName: card.setName, setCode: card.setCode,
-        rarity: card.rarity, imageUrl: card.imageUrl,
+        name: card.name,
+        setName: card.setName,
+        setCode: card.setCode,
+        category: card.category,
+        rarity: card.rarity,
+        imageUrl: card.imageUrl,
       },
       create: {
-        id: card.cardNumber, name: card.name, setName: card.setName,
-        setCode: card.setCode, rarity: card.rarity, imageUrl: card.imageUrl,
+        id: card.cardNumber,
+        name: card.name,
+        setName: card.setName,
+        setCode: card.setCode,
+        category: card.category,
+        rarity: card.rarity,
+        imageUrl: card.imageUrl,
         cardNumber: card.cardNumber,
       },
     });
+    synced++;
   }
-  res.json({ synced: ALL_SERVER_CARDS.length });
+  res.json({ synced });
 }
 
 export async function sets(_req: Request, res: Response) {
-  res.json([
-    { code: "A1", name: "Genetic Apex", cardCount: 286 },
-    { code: "A1a", name: "Mythical Island", cardCount: 86 },
-    { code: "A2", name: "Space-Time Smackdown", cardCount: 207 },
-    { code: "A2a", name: "Triumphant Light", cardCount: 96 },
-    { code: "P-A", name: "Promo-A", cardCount: 49 },
-  ]);
+  const allSets = await getSets();
+  res.json(allSets);
 }
 
 /** Odhad ceny karty z historie transakcí */
@@ -73,7 +82,7 @@ export async function priceHistory(req: Request, res: Response) {
   const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
 
   res.json({
-    estimatedPrice: Math.round(avg * 0.95 * 100) / 100, // 95% tržní hodnoty
+    estimatedPrice: Math.round(avg * 0.95 * 100) / 100,
     lastSoldPrice: prices[0],
     averagePrice: Math.round(avg * 100) / 100,
     minPrice: Math.min(...prices),
@@ -83,34 +92,24 @@ export async function priceHistory(req: Request, res: Response) {
   });
 }
 
-/** Podobné karty (stejný set, stejná rarita) */
+/** Podobné karty */
 export async function similarCards(req: Request, res: Response) {
-  const { cardName, cardSet } = req.query as Record<string, string>;
-  if (!cardName && !cardSet) throw new AppError(400, "Card name or set required");
+  const { cardName } = req.query as Record<string, string>;
+  if (!cardName) throw new AppError(400, "Card name required");
 
-  let similar = ALL_SERVER_CARDS;
-
-  if (cardSet) {
-    similar = similar.filter((c) =>
-      c.setCode.toLowerCase() === cardSet.toLowerCase(),
-    );
-  }
-
-  if (cardName) {
-    // Najdi kartu, od které hledáme podobné
-    const source = ALL_SERVER_CARDS.find(
-      (c) => c.name.toLowerCase().includes(cardName.toLowerCase()),
-    );
-    if (source) {
-      // Podle rarity + setu
-      similar = similar.filter(
-        (c) =>
-          c.rarity === source.rarity &&
-          c.setCode === source.setCode &&
-          c.cardNumber !== source.cardNumber,
-      );
-    }
-  }
+  const cards = await searchCards(cardName);
+  const similar = cards.filter(
+    (c) => c.name.toLowerCase() !== cardName.toLowerCase(),
+  );
 
   res.json(similar.slice(0, 12));
+}
+
+/** Detekce kategorie z názvu */
+export async function detect(req: Request, res: Response) {
+  const { text } = req.query as Record<string, string>;
+  if (!text) throw new AppError(400, "Text required");
+
+  const category = detectCategory(text);
+  res.json({ category, detected: category !== "other" });
 }
