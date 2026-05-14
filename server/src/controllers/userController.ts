@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../utils/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { calculateRank, trustDeltaForTransaction } from "../utils/trust";
+import { calculateFee } from "../utils/fees";
 import { AppError } from "../middleware/errorHandler";
 
 export async function getProfile(req: AuthRequest, res: Response) {
@@ -119,11 +120,18 @@ export async function completeTransaction(req: AuthRequest, res: Response) {
   const delta = trustDeltaForTransaction(winningBid.amount);
   const alreadyCompleted = existingTransaction?.status === "COMPLETED";
 
+  // Spočítat fee podle aktuální konfigurace
+  const feeResult = await calculateFee(winningBid.amount, auction.userId);
+
   await prisma.transaction.upsert({
     where: { auctionId },
     update: { status: "COMPLETED" },
     create: {
-      amount: winningBid.amount, status: "COMPLETED",
+      amount: winningBid.amount,
+      fee: feeResult.fee,
+      feePercent: feeResult.feePercent,
+      netAmount: feeResult.netAmount,
+      status: "COMPLETED",
       auctionId, buyerId: winningBid.userId, sellerId: auction.userId,
     },
   });

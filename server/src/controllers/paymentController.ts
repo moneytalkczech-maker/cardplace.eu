@@ -5,6 +5,7 @@ import { AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import logger from "../utils/logger";
 import { trustDeltaForTransaction } from "../utils/trust";
+import { calculateFee } from "../utils/fees";
 import { sendPaymentReceivedEmail, sendWonEmail, sendSoldEmail } from "../utils/email";
 
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -97,12 +98,20 @@ export async function handleWebhook(req: AuthRequest, res: Response) {
       const transaction = await prisma.transaction.findUnique({ where: { auctionId } });
 
       if (transaction && transaction.status !== "COMPLETED") {
+        const winningBid = await prisma.bid.findFirst({ where: { auctionId }, orderBy: { amount: "desc" } });
+        const feeResult = winningBid ? await calculateFee(winningBid.amount, sellerId) : { fee: 0, feePercent: 0, netAmount: 0 };
+
         await prisma.transaction.update({
           where: { auctionId },
-          data: { status: "COMPLETED", stripePaymentIntentId: paymentIntentId },
+          data: {
+            status: "COMPLETED",
+            stripePaymentIntentId: paymentIntentId,
+            fee: feeResult.fee,
+            feePercent: feeResult.feePercent,
+            netAmount: feeResult.netAmount,
+          },
         });
 
-        const winningBid = await prisma.bid.findFirst({ where: { auctionId }, orderBy: { amount: "desc" } });
         if (winningBid) {
           const delta = trustDeltaForTransaction(winningBid.amount);
           await prisma.user.update({

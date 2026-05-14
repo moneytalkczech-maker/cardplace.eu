@@ -5,6 +5,21 @@ import * as mc from "../controllers/monetizationController";
 
 const router = Router();
 
+// Public prices for frontend
+router.get("/prices", asyncHandler(async (_req, res) => {
+  const config = await (await import("../utils/fees")).ensureMonetizationConfig();
+  res.json({
+    vipMonthly: config.vipMonthly,
+    vipYearly: config.vipYearly,
+    verifiedPrice: config.verifiedPrice,
+    boostTop: config.boostTop,
+    boostHomepage: config.boostHomepage,
+    boostHighlight: config.boostHighlight,
+    boostSocial: config.boostSocial,
+    feePhase: config.feePhase,
+  });
+}));
+
 // Admin config
 router.get("/config", authenticate, asyncHandler(mc.getConfig));
 router.patch("/config", authenticate, asyncHandler(mc.updateConfig));

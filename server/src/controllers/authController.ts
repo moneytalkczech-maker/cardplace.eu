@@ -86,13 +86,18 @@ export async function me(req: AuthRequest, res: Response) {
   });
   if (!user) throw new AppError(404, "User not found");
   const rank = calculateRank(user.trustScore, user.totalSales);
+  const isVip = user.vipUntil ? user.vipUntil > new Date() : false;
   res.json({
     id: user.id, email: user.email, username: user.username,
     role: user.role, trustScore: user.trustScore, verified: user.verified,
+    verifiedType: user.verifiedType,
     avatarUrl: user.avatarUrl, totalSales: user.totalSales,
     auctionCount: user._count.auctions, bidCount: user._count.bids,
     createdAt: user.createdAt, rank: rank.rank, rankLabel: rank.label,
     credits: user.credits,
+    founder: user.founder,
+    vip: isVip,
+    vipUntil: user.vipUntil,
   });
 }
 
