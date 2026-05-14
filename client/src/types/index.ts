@@ -5,6 +5,10 @@ export interface User {
   role: string;
   trustScore: number;
   verified: boolean;
+  verifiedType?: string;
+  founder?: boolean;
+  vip?: boolean;
+  vipUntil?: string;
   avatarUrl?: string;
   totalSales?: number;
   auctionCount?: number;
@@ -13,6 +17,17 @@ export interface User {
   rank?: string;
   rankLabel?: string;
   credits?: number;
+}
+
+export interface MonetizationPrices {
+  vipMonthly: number;
+  vipYearly: number;
+  verifiedPrice: number;
+  boostTop: number;
+  boostHomepage: number;
+  boostHighlight: number;
+  boostSocial: number;
+  feePhase: string;
 }
 
 export interface Card {

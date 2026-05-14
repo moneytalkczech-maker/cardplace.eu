@@ -5,6 +5,7 @@ import {
   MessageCircle, AlertCircle, Zap, Gavel, Award, ChevronUp
 } from "lucide-react";
 import { auctions } from "../services/api";
+import { monetizationApi } from "../services/monetization";
 import api from "../services/api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { toast } from "../components/Toast";
@@ -25,6 +26,9 @@ export default function AuctionDetail() {
   const [bidding, setBidding] = useState(false);
   const [isWatched, setIsWatched] = useState(false);
   const [boostMsg, setBoostMsg] = useState("");
+  const [boostPrices, setBoostPrices] = useState<Record<string, number> | null>(null);
+  const [paidBoostType, setPaidBoostType] = useState<string | null>(null);
+  const [paidBoostLoading, setPaidBoostLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -43,6 +47,18 @@ export default function AuctionDetail() {
       setFetchError(true);
     });
   }, [id]);
+
+  // Fetch boost prices
+  useEffect(() => {
+    monetizationApi.getPrices().then((p) => {
+      setBoostPrices({
+        top: p.boostTop,
+        homepage: p.boostHomepage,
+        highlight: p.boostHighlight,
+        social: p.boostSocial,
+      });
+    }).catch(() => {});
+  }, []);
 
   // Live countdown
   useEffect(() => {
@@ -101,6 +117,20 @@ export default function AuctionDetail() {
       setBoostMsg(err.response?.data?.error || "Chyba");
       setTimeout(() => setBoostMsg(""), 3000);
     }
+  };
+
+  const handlePaidBoost = async (type: string) => {
+    if (!token || !id) return;
+    setPaidBoostType(type);
+    setPaidBoostLoading(true);
+    try {
+      const { url } = await monetizationApi.createBoostCheckout(id, type);
+      window.location.href = url;
+    } catch {
+      toast("error", "Nepodařilo se vytvořit platbu");
+    }
+    setPaidBoostLoading(false);
+    setPaidBoostType(null);
   };
 
   const handleBid = async () => {
@@ -345,12 +375,33 @@ export default function AuctionDetail() {
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 text-center py-2">{t("detail.ownAuction")}</p>
 
-                {/* Boost button */}
+                {/* Credit boost button */}
                 <button onClick={handleBoost} className={`btn w-full font-heading ${auction.featured ? "btn-ghost text-[#A7FF00] border border-[rgba(167,255,0,0.3)]" : "btn-primary"}`}>
                   <Zap className="h-4 w-4" />
                   {auction.featured ? "Boostnutá ⚡ (Zrušit)" : "Boostnout aukci ⚡"}
                 </button>
                 {boostMsg && <p className="text-xs text-center text-[#A7FF00]">{boostMsg}</p>}
+
+                {/* Paid boost options */}
+                {boostPrices && !auction.featured && (
+                  <div className="pt-2">
+                    <p className="text-xs text-gray-500 mb-2 font-heading font-semibold">Placené boosty:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { type: "highlight", label: "Zvýraznění", price: boostPrices.highlight },
+                        { type: "top", label: "Top pozice", price: boostPrices.top },
+                        { type: "homepage", label: "Homepage", price: boostPrices.homepage },
+                        { type: "social", label: "Sociální sítě", price: boostPrices.social },
+                      ].map((b) => (
+                        <button key={b.type} onClick={() => handlePaidBoost(b.type)} disabled={paidBoostLoading}
+                          className="text-xs font-heading px-2 py-2 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[rgba(0,200,255,0.04)] hover:bg-[rgba(0,200,255,0.1)] transition-colors disabled:opacity-50">
+                          <span className="block text-white font-semibold">{b.label}</span>
+                          <span className="block text-[#00C8FF] mt-0.5">{b.price} Kč</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Complete transaction (when ended) */}
                 {!isActive && auction.status !== "COMPLETED" && (
