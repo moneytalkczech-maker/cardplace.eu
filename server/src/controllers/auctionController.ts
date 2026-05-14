@@ -8,6 +8,7 @@ import { auctionListSchema } from "../utils/validation";
 import { AppError } from "../middleware/errorHandler";
 import logger from "../utils/logger";
 import { cacheGet, cacheSet, cacheDel, TTL } from "../utils/cache";
+import { checkAuctionFraud } from "../utils/fraudDetection";
 import { sendOutbidEmail } from "../utils/email";
 
 async function notifyFollowers(auctionId: string, userId: string, title: string) {
@@ -167,11 +168,19 @@ export async function getById(req: AuthRequest, res: Response) {
 
 export async function create(req: AuthRequest, res: Response) {
   const { title, description, imageUrl, startingPrice, endTime, cardId } = req.body;
+  const price = parseFloat(startingPrice);
+
+  // Detekce podezřelých aukcí
+  const fraud = await checkAuctionFraud(req.userId!, price);
+  if (fraud.suspicious) {
+    logger.warn({ userId: req.userId, reasons: fraud.reasons, score: fraud.score }, "Fraud suspicion on auction create");
+  }
+
   const auction = await prisma.auction.create({
     data: {
       title, description, imageUrl,
-      startingPrice: parseFloat(startingPrice),
-      currentPrice: parseFloat(startingPrice),
+      startingPrice: price,
+      currentPrice: price,
       endTime: new Date(endTime),
       userId: req.userId!,
       cardId,
@@ -179,7 +188,7 @@ export async function create(req: AuthRequest, res: Response) {
   });
   notifyFollowers(auction.id, req.userId!, auction.title);
   await cacheDel(`auctions:list*`);
-  res.json(auction);
+  res.json({ ...auction, fraudWarning: fraud.suspicious ? fraud.reasons : undefined });
 }
 
 export async function placeBid(req: AuthRequest, res: Response) {

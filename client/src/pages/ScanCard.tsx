@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Scan, X, AlertCircle, Loader2, Sparkles, Check, ArrowRight, Search } from "lucide-react";
+import { Camera, Scan, X, AlertCircle, Loader2, Sparkles, Check, ArrowRight, Search, Brain } from "lucide-react";
 import CardDetectionService from "../services/CardDetectionService";
+import OcrService from "../services/OcrService";
 import { useTranslation } from "../hooks/useTranslation";
 import { searchCards } from "../lib/CardsDB";
 import type { MarketCard } from "../lib/CardsDB";
+
+const detector = CardDetectionService.getInstance();
+const ocr = OcrService.getInstance();
 
 export default function ScanCard() {
   const { t } = useTranslation();
@@ -17,7 +21,9 @@ export default function ScanCard() {
   const [cardSearch, setCardSearch] = useState("");
   const [cardResults, setCardResults] = useState<MarketCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null);
-  const detector = CardDetectionService.getInstance();
+  const [ocrText, setOcrText] = useState("");
+  const [ocrConfidence, setOcrConfidence] = useState(0);
+  const [autoMatched, setAutoMatched] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -28,6 +34,9 @@ export default function ScanCard() {
       setResult(null);
       setError("");
       setSelectedCard(null);
+      setOcrText("");
+      setOcrConfidence(0);
+      setAutoMatched(false);
     };
     reader.readAsDataURL(file);
   };
@@ -36,32 +45,63 @@ export default function ScanCard() {
     if (!image) return;
     setScanning(true);
     setError("");
+    setOcrText("");
+    setAutoMatched(false);
 
     try {
       const img = new Image();
       img.src = image;
       await new Promise<void>((resolve) => { img.onload = () => resolve(); });
 
+      // Krok 1: YOLO detekce karty
       const det = await detector.detectCardPresence(img);
       setResult(det);
+
       if (!det.detected) {
         setError("Na fotografii nebyla rozpoznána žádná karta. Zkus kvalitnější snímek.");
+        setScanning(false);
+        return;
       }
-    } catch {
+
+      // Krok 2: OCR — přečte text z karty
+      const ocrResult = await ocr.recognize(img);
+      const cleaned = ocr.extractCardName(ocrResult.text);
+
+      if (cleaned && cleaned.length > 2) {
+        setOcrText(cleaned);
+        setOcrConfidence(Math.round(ocrResult.confidence));
+
+        // Krok 3: Automatické vyhledání karty v databázi
+        const matches = await searchCards(cleaned);
+        if (matches.length > 0) {
+          // Vyber nejlepší shodu (první výsledek)
+          const best = matches[0];
+          setSelectedCard(best);
+          setCardSearch(best.name);
+          setAutoMatched(true);
+        } else {
+          // Nenašlo přesnou shodu — necháme uživatele dopsat
+          setCardSearch(cleaned);
+        }
+      }
+    } catch (err) {
       setError("Nepodařilo se načíst AI model. Zkus to znovu.");
     }
     setScanning(false);
   };
 
   useEffect(() => {
-    if (cardSearch.length < 2) { setCardResults([]); return; }
+    if (cardSearch.length < 2 || autoMatched) { 
+      if (!autoMatched) setCardResults([]); 
+      return; 
+    }
     let cancelled = false;
     const timer = setTimeout(async () => {
       const results = await searchCards(cardSearch);
       if (!cancelled) setCardResults(results);
     }, 150);
     return () => { clearTimeout(timer); cancelled = true; };
-  }, [cardSearch]);
+  }, [cardSearch, autoMatched]);
 
   const createAuction = () => {
     if (selectedCard) {
@@ -113,7 +153,7 @@ export default function ScanCard() {
               <><Scan className="h-5 w-5" /> {t("scan.identify")}</>
             )}
           </button>
-          <button onClick={() => { setImage(null); setResult(null); setError(""); setSelectedCard(null); }} className="btn-secondary">
+          <button onClick={() => { setImage(null); setResult(null); setError(""); setSelectedCard(null); setOcrText(""); }} className="btn-secondary">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -128,39 +168,58 @@ export default function ScanCard() {
 
       {result?.detected && (
         <div className="card mb-6 border-[rgba(167,255,0,0.3)]">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className="rounded-full bg-[rgba(167,255,0,0.15)] p-2">
               <Check className="h-6 w-6 text-[#A7FF00]" />
             </div>
             <div>
               <p className="font-heading font-bold text-lg">Karta detekována! ✅</p>
-              <p className="text-sm text-gray-400">Spolehlivost: {result.confidence}%</p>
+              <p className="text-sm text-gray-400">
+                Detekce: {result.confidence}% 
+                {ocrText && <> · OCR: {ocrConfidence}%</>}
+              </p>
             </div>
           </div>
 
-          <p className="text-sm text-gray-500 mb-3">Vyber kartu ze seznamu a vytvoř aukci:</p>
-
-          {/* Card search */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              className="input pl-10"
-              placeholder="Napiš název karty..."
-              value={cardSearch}
-              onChange={(e) => setCardSearch(e.target.value)}
-            />
-          </div>
-          {cardResults.length > 0 && (
-            <div className="mb-3 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[#0B1220] max-h-40 overflow-y-auto">
-              {cardResults.map((c) => (
-                <button key={c.id} type="button" onClick={() => { setSelectedCard(c); setCardSearch(c.name); setCardResults([]); }}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0">
-                  <span className="font-medium">{c.name}</span>
-                  <span className="text-gray-500 ml-2">{c.setName}</span>
-                </button>
-              ))}
+          {/* OCR výsledek */}
+          {ocrText && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] mb-3">
+              <Brain className="h-4 w-4 text-[#00C8FF] flex-shrink-0" />
+              <span className="text-sm text-gray-300">
+                Rozpoznáno: <strong className="text-white">{ocrText}</strong>
+              </span>
+              {autoMatched && (
+                <span className="text-xs text-[#A7FF00] ml-auto">Auto-match ✅</span>
+              )}
             </div>
+          )}
+
+          {/* Ruční vyhledávání (fallback nebo dolaďění) */}
+          {!autoMatched && (
+            <>
+              <p className="text-sm text-gray-500 mb-3">Vyber kartu ze seznamu:</p>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <input
+                  type="text"
+                  className="input pl-10"
+                  placeholder="Napiš název karty..."
+                  value={cardSearch}
+                  onChange={(e) => setCardSearch(e.target.value)}
+                />
+              </div>
+              {cardResults.length > 0 && (
+                <div className="mb-3 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[#0B1220] max-h-40 overflow-y-auto">
+                  {cardResults.map((c) => (
+                    <button key={c.id} type="button" onClick={() => { setSelectedCard(c); setCardSearch(c.name); setCardResults([]); }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0">
+                      <span className="font-medium">{c.name}</span>
+                      <span className="text-gray-500 ml-2">{c.setName}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {selectedCard && (
