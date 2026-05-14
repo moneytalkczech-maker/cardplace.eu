@@ -62,6 +62,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             <Link to="/auctions" className="btn-ghost">{t("nav.auctions")}</Link>
             <Link to="/wanted" className="btn-ghost">Poptávky</Link>
+            <Link to="/cards" className="btn-ghost">Databáze</Link>
             {token && <Link to="/collection" className="btn-ghost">Sbírka</Link>}
             {token && (
               <>

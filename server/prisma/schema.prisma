@@ -43,6 +43,84 @@ model User {
   promotions        Promotion[]
 }
 
+model CardSet {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  category     String
+  brand        String?
+  year         String?
+  description  String?
+  imageUrl     String?
+  totalCards   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  cards        DatabaseCard[]
+}
+
+model DatabaseCard {
+  id                  String   @id @default(cuid())
+  setId               String
+  set                 CardSet  @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  name                String
+  slug                String   @unique
+  cardNumber          String?
+  playerName          String?
+  team                String?
+  rarity              String?
+  parallel            String?
+  type                String?
+  imageUrl            String?
+  description         String?
+
+  cardmarketUrl       String?
+  ebaySearchQuery     String?
+
+  priceCardmarketLow  Float?
+  priceCardmarketAvg  Float?
+  priceCardmarketTrend Float?
+  priceEbayAvg        Float?
+  priceEbayMedian     Float?
+  priceEbayLastSold   Float?
+
+  currency            String?  @default("CZK")
+  pricesUpdatedAt     DateTime?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  priceSnapshots      CardPriceSnapshot[]
+
+  @@index([setId])
+  @@index([name])
+  @@index([playerName])
+  @@index([cardNumber])
+  @@index([rarity])
+}
+
+model CardPriceSnapshot {
+  id              String   @id @default(cuid())
+  cardId          String
+  card            DatabaseCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  source          String
+  currency        String
+  lowPrice        Float?
+  avgPrice        Float?
+  medianPrice     Float?
+  trendPrice      Float?
+  lastSoldPrice   Float?
+
+  rawData         String?
+  createdAt       DateTime @default(now())
+
+  @@index([cardId])
+  @@index([source])
+  @@index([createdAt])
+}
+
+// Původní Card model pro aukce (zůstává)
 model Card {
   id             String    @id @default(cuid())
   name           String

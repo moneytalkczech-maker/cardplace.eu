@@ -22,9 +22,12 @@ import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payments";
 import monetizationRoutes from "./routes/monetization";
 import profileRoutes from "./routes/profile";
+import cardSetsRoutes from "./routes/cardSets";
+import databaseCardsRoutes from "./routes/databaseCards";
 import prisma from "./utils/prisma";
 import logger from "./utils/logger";
 import { errorHandler } from "./middleware/errorHandler";
+import { cardSetsSitemap, cardsSitemap } from "./controllers/sitemapController";
 
 dotenv.config();
 
@@ -54,12 +57,17 @@ app.use(cors({ origin: CORS_ORIGIN }));
 app.use(passport.initialize());
 app.use(express.json({ limit: "10mb" }));
 
+app.get("/sitemap-card-sets.xml", cardSetsSitemap);
+app.get("/sitemap-cards.xml", cardsSitemap);
+
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/auth", oauthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/auctions", auctionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cards", cardRoutes);
+app.use("/api/card-sets", cardSetsRoutes);
+app.use("/api/database-cards", databaseCardsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/wanted", wantedRoutes);
 app.use("/api/collection", collectionRoutes);

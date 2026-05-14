@@ -26,6 +26,9 @@ const ScanCard = lazy(() => import("./pages/ScanCard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Wanted = lazy(() => import("./pages/Wanted"));
 const Collection = lazy(() => import("./pages/Collection"));
+const CardDatabasePage = lazy(() => import("./pages/CardDatabasePage"));
+const CardSetDetailPage = lazy(() => import("./pages/CardSetDetailPage"));
+const CardDetailPage = lazy(() => import("./pages/CardDetailPage"));
 const Settings = lazy(() => import("./pages/Settings"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
@@ -84,6 +87,9 @@ export default function App() {
             <Route path="/wanted" element={<Wanted />} />
             <Route path="/collection" element={<Collection />} />
             <Route path="/collection/:id" element={<Collection />} />
+            <Route path="/cards" element={<CardDatabasePage />} />
+            <Route path="/cards/sets/:setSlug" element={<CardSetDetailPage />} />
+            <Route path="/cards/card/:cardId" element={<CardDetailPage />} />
             <Route path="/auth-callback" element={<AuthCallback />} />
             <Route
               path="/settings"
