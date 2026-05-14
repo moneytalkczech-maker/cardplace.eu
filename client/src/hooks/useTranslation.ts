@@ -1,14 +1,22 @@
 import cs from "../locales/cs";
+import en from "../locales/en";
 
-type TranslationKey = keyof typeof cs;
+const locales: Record<string, Record<string, string>> = { cs, en };
 
-const translations: Record<string, Record<string, string>> = { cs };
+function detectLocale(): string {
+  if (typeof window === "undefined") return "cs";
+  const stored = localStorage.getItem("locale");
+  if (stored && locales[stored]) return stored;
+  const browserLang = navigator.language?.split("-")[0];
+  if (browserLang && locales[browserLang]) return browserLang;
+  return "cs";
+}
 
 export function useTranslation() {
-  const locale = "cs";
+  const locale = detectLocale();
 
-  const t = (key: TranslationKey | string, params?: Record<string, string | number>): string => {
-    let text = translations[locale]?.[key] ?? key;
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let text = locales[locale]?.[key] ?? locales["cs"]?.[key] ?? key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
         text = text.replace(`{${k}}`, String(v));
@@ -17,5 +25,12 @@ export function useTranslation() {
     return text;
   };
 
-  return { t, locale };
+  const setLocale = (lang: string) => {
+    if (locales[lang]) {
+      localStorage.setItem("locale", lang);
+      window.location.reload();
+    }
+  };
+
+  return { t, locale, setLocale };
 }

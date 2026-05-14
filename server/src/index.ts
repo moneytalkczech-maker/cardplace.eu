@@ -7,6 +7,7 @@ import path from "path";
 import statusMonitor from "express-status-monitor";
 import * as Sentry from "@sentry/node";
 import { initSocket } from "./socket";
+import { authenticate } from "./middleware/auth";
 import passport from "passport";
 import oauthRoutes from "./routes/oauth";
 import authRoutes from "./routes/auth";
@@ -64,6 +65,13 @@ app.use("/api/follow", followRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/profile", profileRoutes);
+// Status monitor — admin only in production
+if (process.env.NODE_ENV === "production") {
+  app.use("/status", authenticate, (req: any, _res: any, next: any) => {
+    if (req.userRole !== "ADMIN") return _res.status(403).json({ error: "Admin access required" });
+    next();
+  });
+}
 app.use(statusMonitor());
 
 app.get("/api/health", async (_req, res) => {

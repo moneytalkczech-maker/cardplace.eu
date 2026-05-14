@@ -21,7 +21,7 @@ describe("App component", () => {
       </MemoryRouter>
     );
     // Login page should have the submit button
-    const button = await screen.findByRole("button", { name: /přihlásit se/i });
+    const button = await screen.findByRole("button", { name: /sign in/i });
     expect(button).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe("App component", () => {
         <App />
       </MemoryRouter>
     );
-    const heading = await screen.findByRole("heading", { name: /vytvořit účet/i });
+    const heading = await screen.findByRole("heading", { name: /create account/i });
     expect(heading).toBeInTheDocument();
   });
 
@@ -41,7 +41,7 @@ describe("App component", () => {
         <App />
       </MemoryRouter>
     );
-    // Mobile nav should contain Czech labels
+    // Mobile nav should contain nav labels
     const navLinks = await screen.findAllByText(/domů|aukce|přidat|poptávky/i);
     expect(navLinks.length).toBeGreaterThanOrEqual(3);
   });
