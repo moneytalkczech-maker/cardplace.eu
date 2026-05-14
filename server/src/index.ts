@@ -20,6 +20,7 @@ import followRoutes from "./routes/follow";
 import collectionRoutes from "./routes/collection";
 import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payments";
+import monetizationRoutes from "./routes/monetization";
 import profileRoutes from "./routes/profile";
 import prisma from "./utils/prisma";
 import logger from "./utils/logger";
@@ -41,6 +42,7 @@ const server = http.createServer(app);
 
 // Raw body for Stripe webhook
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
+app.use("/api/monetization/webhook", express.raw({ type: "application/json" }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" }, contentSecurityPolicy: false }));
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN;
@@ -64,6 +66,7 @@ app.use("/api/collection", collectionRoutes);
 app.use("/api/follow", followRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/monetization", monetizationRoutes);
 app.use("/api/profile", profileRoutes);
 // Status monitor — admin only in production
 if (process.env.NODE_ENV === "production") {

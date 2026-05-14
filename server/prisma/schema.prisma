@@ -18,6 +18,10 @@ model User {
   totalSales        Int          @default(0)
   credits           Int          @default(3)
   verified          Boolean      @default(false)
+  verifiedType      String?      @default("none") // none | paid | founder
+  founder           Boolean      @default(false)
+  founderSince      DateTime?
+  vipUntil          DateTime?
   stripeCustomerId  String?      @unique
   lastDailyCredit   DateTime?
   createdAt         DateTime     @default(now())
@@ -35,6 +39,8 @@ model User {
   following         Follow[]   @relation("FollowedBy")
   reviewsGiven      Review[]   @relation("Reviewer")
   reviewsReceived   Review[]   @relation("Reviewed")
+  subscriptions     Subscription[]
+  promotions        Promotion[]
 }
 
 model Card {
@@ -68,6 +74,7 @@ model Auction {
   bids          Bid[]
   watchlists    Watchlist[]
   transaction   Transaction?
+  promotions    Promotion[]
 }
 
 model Bid {
@@ -104,6 +111,9 @@ model Notification {
 model Transaction {
   id                   String         @id @default(cuid())
   amount               Float
+  fee                  Float          @default(0)
+  feePercent           Float          @default(0)
+  netAmount            Float          @default(0)
   status               String         @default("PENDING")
   stripePaymentIntentId String?
   stripeSessionId      String?
@@ -115,6 +125,59 @@ model Transaction {
   buyer                User           @relation("BuyerTransactions", fields: [buyerId], references: [id])
   seller               User           @relation("SellerTransactions", fields: [sellerId], references: [id])
   review               Review?
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  plan          String   // "vip_monthly" | "vip_yearly"
+  status        String   @default("ACTIVE") // ACTIVE | CANCELLED | EXPIRED
+  stripePriceId String?
+  stripeSubId   String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  createdAt     DateTime @default(now())
+  cancelledAt   DateTime?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Promotion {
+  id            String   @id @default(cuid())
+  type          String   // "top" | "homepage" | "highlight" | "social"
+  price         Float
+  stripeSessionId String?
+  status        String   @default("PENDING") // PENDING | ACTIVE | EXPIRED
+  startsAt      DateTime?
+  endsAt        DateTime?
+  createdAt     DateTime @default(now())
+  auctionId     String
+  auction       Auction  @relation(fields: [auctionId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model MonetizationConfig {
+  id            String   @id @default("platform")
+  // Fee nastavení
+  feePhase      String   @default("phase1") // phase1 | phase2
+  feeDefault    Float    @default(0)
+  feeBelow500   Float    @default(0)
+  fee500to5000  Float    @default(5)
+  feeAbove5000  Float    @default(6)
+  feeFounder    Float    @default(3)
+  feeVip        Float    @default(3)
+  // Ceny v Kč
+  verifiedPrice Float    @default(199)
+  vipMonthly    Float    @default(299)
+  vipYearly     Float    @default(2990)
+  boostTop      Float    @default(19)
+  boostHomepage Float    @default(49)
+  boostHighlight Float   @default(15)
+  boostSocial   Float    @default(99)
+  // Founder limit
+  founderLimit  Int      @default(20)
+  founderCount  Int      @default(0)
+  updatedAt     DateTime @default(now()) @updatedAt
 }
 
 model Review {
