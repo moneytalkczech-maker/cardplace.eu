@@ -13,9 +13,9 @@
 #    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 #    - POKEMON_TCG_API_KEY, EBAY_APP_ID
 #    - SENTRY_DSN (volitelné)
-# 2. Až budeš mít custom doménu (cardplace.eu), aktualizuj:
-#    - CORS_ORIGIN → https://cardplace.eu
-#    - VITE_API_URL → https://api.cardplace.eu (nebo https://cardplace-api.onrender.com/api)
+# 2. Až nastavíš custom doménu v Render Dashboard → cardplace-client → Settings → Custom Domain:
+#    - Přidej cardplace.eu (a www.cardplace.eu)
+# 3. API zůstává na https://cardplace-api.onrender.com (free tier nepodporuje custom domény pro web services)
 
 services:
   # ─── Backend API (Node.js / Express) ───────────────────────
@@ -34,7 +34,7 @@ services:
       - key: PORT
         value: 10000
       - key: CORS_ORIGIN
-        value: https://cardplace.onrender.com
+        value: https://cardplace.eu
       - key: DATABASE_URL
         fromDatabase:
           name: cardplace-db
