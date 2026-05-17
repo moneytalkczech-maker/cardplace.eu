@@ -5,6 +5,45 @@ import { AppError } from "../middleware/errorHandler";
 import { ensureMonetizationConfig, calculateFee } from "../utils/fees";
 import logger from "../utils/logger";
 
+// Singleton Stripe instance
+let stripeInstance: any = null;
+function getStripe() {
+  if (!stripeInstance && process.env.STRIPE_SECRET_KEY) {
+    const Stripe = require("stripe");
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-03-31" as any });
+  }
+  return stripeInstance;
+}
+
+/** Add calendar months to a date */
+function addCalendarMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + months);
+  return result;
+}
+
+/** Idempotency check: skip if webhook event was already processed */
+async function isWebhookProcessed(eventId: string): Promise<boolean> {
+  const existing = await prisma.siteSetting.findUnique({
+    where: { key: `webhook_${eventId}` },
+  });
+  return !!existing;
+}
+
+async function markWebhookProcessed(eventId: string): Promise<void> {
+  await prisma.siteSetting.create({
+    data: {
+      key: `webhook_${eventId}`,
+      value: new Date().toISOString(),
+      type: "string",
+      group: "webhooks",
+      description: "Processed Stripe webhook event",
+    },
+  }).catch(() => {
+    // Item already exists (race condition guard) — ignore
+  });
+}
+
 // ─── Admin: nastavení monetizace ───
 
 export async function getConfig(_req: AuthRequest, res: Response) {
@@ -13,7 +52,7 @@ export async function getConfig(_req: AuthRequest, res: Response) {
 }
 
 export async function updateConfig(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin access required");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin access required");
 
   const allowed = [
     "feePhase", "feeDefault", "feeBelow500", "fee500to5000", "feeAbove5000",
@@ -48,40 +87,48 @@ export async function listFounders(_req: AuthRequest, res: Response) {
 }
 
 export async function assignFounder(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin access required");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin access required");
 
   const { userId } = req.body;
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError(404, "User not found");
   if (user.founder) throw new AppError(400, "User is already a founder");
 
-  const config = await ensureMonetizationConfig();
-  if (config.founderCount >= config.founderLimit) {
-    throw new AppError(400, `Founder limit reached (${config.founderLimit})`);
-  }
+  // Atomická operace: kontrola limitu + inkrement + přiřazení v jedné transakci
+  // Prevence race condition: dva admini nemohou současně překročit limit
+  await prisma.$transaction(async (tx) => {
+    const config = await tx.monetizationConfig.findUnique({ where: { id: "platform" } });
+    if (!config) throw new AppError(500, "Monetization config not available");
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      founder: true,
-      founderSince: new Date(),
-      verified: true,
-      verifiedType: "founder",
-      credits: { increment: 10 },
-    },
-  });
+    if (config.founderCount >= config.founderLimit) {
+      throw new AppError(400, `Founder limit reached (${config.founderLimit})`);
+    }
 
-  await prisma.monetizationConfig.update({
-    where: { id: "platform" },
-    data: { founderCount: { increment: 1 } },
-  });
+    // Inkrementovat founderCount v transakci
+    await tx.monetizationConfig.update({
+      where: { id: "platform" },
+      data: { founderCount: { increment: 1 } },
+    });
 
-  await prisma.notification.create({
-    data: {
-      message: "🎉 Jsi founder CardBid! Získáváš VIP status, verified badge a 10 kreditů zdarma.",
-      type: "INFO",
-      userId,
-    },
+    // Přiřadit founder status
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        founder: true,
+        founderSince: new Date(),
+        verified: true,
+        verifiedType: "founder",
+        credits: { increment: 10 },
+      },
+    });
+
+    await tx.notification.create({
+      data: {
+        message: "🎉 Jsi founder CardPlace.eu! Získáváš VIP status, verified badge a 10 kreditů zdarma.",
+        type: "INFO",
+        userId,
+      },
+    });
   });
 
   logger.info({ userId }, "Founder assigned by admin");
@@ -94,13 +141,12 @@ export async function createVipCheckout(req: AuthRequest, res: Response) {
   const { plan } = req.body; // "monthly" | "yearly"
   if (!["monthly", "yearly"].includes(plan)) throw new AppError(400, "Invalid plan");
 
-  const Stripe = require("stripe");
-  const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-03-31" as any })
-    : null;
+  const stripe = getStripe();
   if (!stripe) throw new AppError(503, "Payments not configured");
 
   const config = await ensureMonetizationConfig();
+  if (!config) throw new AppError(500, "Monetization config not available");
+
   const price = plan === "monthly" ? config.vipMonthly : config.vipYearly;
 
   // Get or create Stripe customer
@@ -140,13 +186,12 @@ export async function createVipCheckout(req: AuthRequest, res: Response) {
 // ─── Verified platba ───
 
 export async function createVerifiedCheckout(req: AuthRequest, res: Response) {
-  const Stripe = require("stripe");
-  const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-03-31" as any })
-    : null;
+  const stripe = getStripe();
   if (!stripe) throw new AppError(503, "Payments not configured");
 
   const config = await ensureMonetizationConfig();
+  if (!config) throw new AppError(500, "Monetization config not available");
+
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   if (user?.verified) throw new AppError(400, "Already verified");
 
@@ -192,13 +237,12 @@ export async function createBoostCheckout(req: AuthRequest, res: Response) {
   if (!auction) throw new AppError(404, "Auction not found");
   if (auction.userId !== req.userId) throw new AppError(403, "Not your auction");
 
-  const Stripe = require("stripe");
-  const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-03-31" as any })
-    : null;
+  const stripe = getStripe();
   if (!stripe) throw new AppError(503, "Payments not configured");
 
   const config = await ensureMonetizationConfig();
+  if (!config) throw new AppError(500, "Monetization config not available");
+
   const prices: Record<string, number> = {
     top: config.boostTop,
     homepage: config.boostHomepage,
@@ -240,28 +284,36 @@ export async function createBoostCheckout(req: AuthRequest, res: Response) {
 // ─── Webhook pro Stripe events ───
 
 export async function handleMonetizationWebhook(req: AuthRequest, res: Response) {
-  const Stripe = require("stripe");
-  const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-03-31" as any })
-    : null;
+  const stripe = getStripe();
   if (!stripe) {
-    res.json({ received: true });
+    logger.warn("Monetization webhook received but Stripe is not configured");
+    res.status(503).json({ error: "Payments not configured" });
     return;
   }
 
   const sig = req.headers["stripe-signature"] as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  if (!endpointSecret) {
+    logger.error("STRIPE_WEBHOOK_SECRET is not configured — webhooks will be rejected");
+    res.status(500).json({ error: "Webhook secret not configured" });
+    return;
+  }
+
   let event: any;
-  if (endpointSecret) {
-    try {
-      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } catch {
-      res.status(400).json({ error: "Invalid signature" });
-      return;
-    }
-  } else {
-    event = req.body;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch {
+    logger.warn({ sig }, "Invalid Stripe webhook signature");
+    res.status(400).json({ error: "Invalid signature" });
+    return;
+  }
+
+  // 🔒 Idempotency check: skip if already processed
+  if (event.id && await isWebhookProcessed(event.id)) {
+    logger.info({ eventId: event.id }, "Webhook already processed, skipping");
+    res.json({ received: true, skipped: true });
+    return;
   }
 
   switch (event.type) {
@@ -282,6 +334,14 @@ export async function handleMonetizationWebhook(req: AuthRequest, res: Response)
       }
 
       if (meta.type === "boost" && meta.auctionId) {
+        // Verify auction belongs to user
+        const auction = await prisma.auction.findUnique({ where: { id: meta.auctionId } });
+        if (!auction || auction.userId !== userId) {
+          logger.warn({ auctionId: meta.auctionId, userId }, "Boost auction mismatch");
+          res.json({ received: true });
+          return;
+        }
+
         const boostType = meta.boostType;
         const days: Record<string, number> = { top: 7, homepage: 7, highlight: 14, social: 3 };
         const now = new Date();
@@ -311,7 +371,16 @@ export async function handleMonetizationWebhook(req: AuthRequest, res: Response)
       if (meta.type === "vip" && userId) {
         const months = meta.plan === "yearly" ? 12 : 1;
         const now = new Date();
-        const vipUntil = new Date(now.getTime() + months * 30 * 24 * 60 * 60 * 1000);
+        // Use calendar months instead of 30-day months
+        const vipUntil = addCalendarMonths(now, months);
+
+        let stripeSubId: string;
+        if (typeof session.subscription === "string") {
+          stripeSubId = session.subscription;
+        } else {
+          stripeSubId = session.id;
+          logger.warn({ sessionId: session.id }, "VIP checkout: session.subscription is not a string, using session.id");
+        }
 
         await prisma.user.update({
           where: { id: userId },
@@ -322,7 +391,7 @@ export async function handleMonetizationWebhook(req: AuthRequest, res: Response)
           data: {
             plan: `vip_${meta.plan}`,
             status: "ACTIVE",
-            stripeSubId: session.subscription as string || session.id,
+            stripeSubId,
             currentPeriodStart: now,
             currentPeriodEnd: vipUntil,
             userId,
@@ -349,6 +418,7 @@ export async function handleMonetizationWebhook(req: AuthRequest, res: Response)
         });
         if (sub) {
           const periodEnd = new Date(invoice.lines?.data?.[0]?.period?.end * 1000 || Date.now());
+          // Use Stripe's actual period end (which is calendar-accurate)
           await prisma.subscription.update({
             where: { id: sub.id },
             data: {
@@ -382,6 +452,11 @@ export async function handleMonetizationWebhook(req: AuthRequest, res: Response)
       }
       break;
     }
+  }
+
+  // Mark webhook as processed
+  if (event.id) {
+    await markWebhookProcessed(event.id);
   }
 
   res.json({ received: true });

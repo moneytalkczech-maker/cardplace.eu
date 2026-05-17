@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Plus, Trash2, Minus, Plus as PlusIcon, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Trash2, Minus, Plus as PlusIcon, BookOpen, Loader2, ChevronDown } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { searchCards, type MarketCard } from "../lib/CardsDB";
 import api from "../services/api";
+import { toast } from "../components/Toast";
+import { useTranslation } from "../hooks/useTranslation";
+
+const ITEMS_PER_PAGE = 24;
 
 interface CollectionCard {
   id: string;
@@ -18,6 +22,7 @@ interface CollectionCard {
 }
 
 function useCollection(userId?: string) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<CollectionCard[]>([]);
   const [value, setValue] = useState({ totalValue: 0, totalCards: 0, uniqueCards: 0 });
   const [loading, setLoading] = useState(true);
@@ -28,7 +33,7 @@ function useCollection(userId?: string) {
     Promise.all([
       api.get(`/collection/${userId}`).then((r) => setItems(r.data)),
       api.get(`/collection/${userId}/value`).then((r) => setValue(r.data)),
-    ]).catch(() => {}).finally(() => setLoading(false));
+    ]).catch(() => toast("error", t("collection.loadError"))).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetch(); }, [userId]);
@@ -36,8 +41,10 @@ function useCollection(userId?: string) {
 }
 
 export default function Collection() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user: me, token } = useAuthStore();
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const userId = id || me?.id || "";
   const isMe = !id || id === me?.id;
   const { items, value, loading, refetch } = useCollection(userId);
@@ -77,7 +84,7 @@ export default function Collection() {
       setCardSearch("");
       setQuantity(1);
       setPurchasePrice("");
-    } catch {}
+    } catch { toast("error", t("collection.addError")); }
   };
 
   const handleUpdateQty = async (itemId: string, newQty: number) => {
@@ -88,23 +95,23 @@ export default function Collection() {
         await api.patch(`/collection/${itemId}`, { quantity: newQty });
       }
       refetch();
-    } catch {}
+    } catch { toast("error", t("collection.saveError")); }
   };
 
   const handleRemove = async (itemId: string) => {
     try {
       await api.delete(`/collection/${itemId}`);
       refetch();
-    } catch {}
+    } catch { toast("error", t("collection.deleteError")); }
   };
 
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-[#111B2E] rounded w-48" />
+          <div className="h-8 bg-[#0B1220] rounded w-48" />
           <div className="grid grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 bg-[#111B2E] rounded" />)}
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 bg-[#0B1220] rounded" />)}
           </div>
         </div>
       </div>
@@ -117,13 +124,13 @@ export default function Collection() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold font-heading flex items-center gap-3">
-            <BookOpen className="h-7 w-7 text-[#00C8FF]" /> Moje sbírka
+            <BookOpen className="h-7 w-7 text-[#00C8FF]" /> {t("collection.title")}
           </h1>
-          <p className="text-gray-500 mt-1">Sleduj hodnotu své sbírky karet</p>
+          <p className="text-gray-500 mt-1">{t("collection.subtitle")}</p>
         </div>
         {isMe && (
           <button onClick={() => setShowAdd(!showAdd)} className="btn-primary font-heading">
-            <Plus className="h-4 w-4" /> Přidat kartu
+            <Plus className="h-4 w-4" /> {t("collection.addCard")}
           </button>
         )}
       </div>
@@ -132,26 +139,26 @@ export default function Collection() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="card text-center">
           <p className="text-3xl font-bold font-heading text-[#A7FF00]">{value.uniqueCards}</p>
-          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">Unikátních karet</p>
+          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">{t("collection.uniqueCards")}</p>
         </div>
         <div className="card text-center">
           <p className="text-3xl font-bold font-heading text-[#00C8FF]">{value.totalCards}</p>
-          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">Kusů celkem</p>
+          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">{t("collection.totalCards")}</p>
         </div>
         <div className="card text-center">
           <p className="text-3xl font-bold font-heading text-[#A7FF00]">{value.totalValue.toLocaleString("cs-CZ")} Kč</p>
-          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">Hodnota sbírky</p>
+          <p className="text-xs text-gray-500 font-heading uppercase tracking-wider">{t("collection.totalValue")}</p>
         </div>
       </div>
 
       {/* Add form */}
       {showAdd && (
         <div className="card mb-8">
-          <h2 className="font-heading font-bold text-lg mb-4">Přidat kartu do sbírky</h2>
+          <h2 className="font-heading font-bold text-lg mb-4">{t("collection.addFormTitle")}</h2>
           <div className="space-y-4 max-w-md">
             <div>
-              <label className="block text-sm font-heading font-semibold mb-1.5">Karta</label>
-              <input className="input" placeholder="Název karty..." value={cardSearch} onChange={(e) => setCardSearch(e.target.value)} />
+              <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.card")}</label>
+              <input className="input" placeholder={t("collection.cardPlaceholder")} value={cardSearch} onChange={(e) => setCardSearch(e.target.value)} />
               {cardResults.length > 0 && (
                 <div className="mt-1 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[#0B1220] max-h-40 overflow-y-auto">
                   {cardResults.map((c) => (
@@ -171,15 +178,15 @@ export default function Collection() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-heading font-semibold mb-1.5">Počet</label>
+                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.quantity")}</label>
                 <input type="number" min="1" className="input" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} />
               </div>
               <div>
-                <label className="block text-sm font-heading font-semibold mb-1.5">Cena při koupi</label>
-                <input type="number" className="input" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder="0" />
+                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.purchasePrice")}</label>
+                <input type="number" className="input" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder={t("collection.purchasePricePlaceholder")} />
               </div>
             </div>
-            <button onClick={handleAdd} disabled={!selectedCard} className="btn-primary font-heading">Přidat do sbírky</button>
+            <button onClick={handleAdd} disabled={!selectedCard} className="btn-primary font-heading">{t("collection.addToCollection")}</button>
           </div>
         </div>
       )}
@@ -188,12 +195,13 @@ export default function Collection() {
       {items.length === 0 ? (
         <div className="text-center py-20">
           <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-600" />
-          <p className="text-lg font-heading font-bold text-gray-400">Sbírka je prázdná</p>
-          <p className="text-sm text-gray-600 mt-1">Začni přidávat karty do své sbírky</p>
+          <p className="text-lg font-heading font-bold text-gray-400">{t("collection.empty")}</p>
+          <p className="text-sm text-gray-600 mt-1">{t("collection.emptyHint")}</p>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
+          {items.slice(0, visibleCount).map((item) => (
             <div key={item.id} className="card hover:border-[rgba(0,200,255,0.3)] transition-all">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -202,7 +210,7 @@ export default function Collection() {
                   {item.cardRarity && <span className="badge-blue mt-1 inline-block">{item.cardRarity}</span>}
                   <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                     <span className="badge-green">{item.condition}</span>
-                    {item.purchasePrice && <span>Pořízeno za {item.purchasePrice} Kč</span>}
+                    {item.purchasePrice && <span>{t("collection.purchasedFor")} {item.purchasePrice} Kč</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -230,6 +238,18 @@ export default function Collection() {
             </div>
           ))}
         </div>
+        {visibleCount < items.length && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setVisibleCount((p) => p + ITEMS_PER_PAGE)}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[rgba(0,200,255,0.2)] text-[#00C8FF] font-heading font-bold hover:bg-[rgba(0,200,255,0.08)] transition-all"
+            >
+              <ChevronDown className="h-4 w-4" />
+              {t("collection.loadMore")} ({items.length - visibleCount} {t("collection.remaining")})
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

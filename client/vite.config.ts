@@ -9,7 +9,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom", "zustand", "axios", "lucide-react"],
           socket: ["socket.io-client"],
-          tf: ["@tensorflow/tfjs"],
+          // TF.js a Tesseract.js odstraněny z manualChunks — načítají se dynamicky pouze na /scan
         },
       },
     },

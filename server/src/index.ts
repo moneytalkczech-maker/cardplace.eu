@@ -4,6 +4,8 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import http from "http";
 import path from "path";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import statusMonitor from "express-status-monitor";
 import * as Sentry from "@sentry/node";
 import { initSocket } from "./socket";
@@ -22,6 +24,8 @@ import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payments";
 import monetizationRoutes from "./routes/monetization";
 import profileRoutes from "./routes/profile";
+import reportRoutes from "./routes/reports";
+import contactRoutes from "./routes/contact";
 import cardSetsRoutes from "./routes/cardSets";
 import databaseCardsRoutes from "./routes/databaseCards";
 import prisma from "./utils/prisma";
@@ -46,21 +50,101 @@ const server = http.createServer(app);
 // Raw body for Stripe webhook
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 app.use("/api/monetization/webhook", express.raw({ type: "application/json" }));
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" }, contentSecurityPolicy: false }));
+const isDev = process.env.NODE_ENV !== "production";
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", ...(isDev ? ["'unsafe-eval'"] : [])],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: [
+        "'self'",
+        "https://api.stripe.com",
+        "https://checkout.stripe.com",
+        ...(isDev ? ["ws://localhost:*"] : []),
+      ],
+      frameSrc: ["'self'", "https://checkout.stripe.com"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      formAction: ["'self'"],
+      ...(!isDev ? { upgradeInsecureRequests: [] } : {}),
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  xFrameOptions: { action: "deny" },
+  xContentTypeOptions: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+}));
+
+// Další security headers
+app.use((_req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("X-DNS-Prefetch-Control", "off");
+  res.setHeader("X-Download-Options", "noopen");
+  res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+  next();
+});
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN;
 if (!CORS_ORIGIN) {
   logger.fatal("CORS_ORIGIN environment variable is required");
   process.exit(1);
 }
-app.use(cors({ origin: CORS_ORIGIN }));
+
+// Trust proxy — správné čtení IP za reverse proxy (nginx, Cloudflare)
+// Nutné pro rate limiting, jinak útočník obchází limity přes X-Forwarded-For
+app.set("trust proxy", 1);
+
+app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(passport.initialize());
+app.use(cookieParser());
+
+// General API rate limiter (bezpečnostní síť)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuta
+  max: 100,
+  message: { error: "Příliš mnoho požadavků, zkus to za minutu" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", apiLimiter);
+
+// Request logging
+app.use((req, _res, next) => {
+  logger.info({ method: req.method, url: req.url, ip: req.ip }, "Request");
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 
 app.get("/sitemap-card-sets.xml", cardSetsSitemap);
 app.get("/sitemap-cards.xml", cardsSitemap);
 
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
+  setHeaders: (res, filePath) => {
+    // Explicitní Content-Type pro obrázky — prevence MIME sniffing
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".webp": "image/webp",
+      ".gif": "image/gif",
+    };
+    if (mimeMap[ext]) {
+      res.setHeader("Content-Type", mimeMap[ext]);
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    }
+  },
+}));
 app.use("/api/auth", oauthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/auctions", auctionRoutes);
@@ -75,15 +159,18 @@ app.use("/api/follow", followRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/monetization", monetizationRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/profile", profileRoutes);
-// Status monitor — admin only in production
-if (process.env.NODE_ENV === "production") {
+// Status monitor — admin only, pouze v development/staging
+// V produkci vypnut — odhaluje interní metriky (CPU, memory, response times)
+if (isDev) {
   app.use("/status", authenticate, (req: any, _res: any, next: any) => {
-    if (req.userRole !== "ADMIN") return _res.status(403).json({ error: "Admin access required" });
+    if (req.userRole?.toLowerCase() !== "admin") return _res.status(403).json({ error: "Admin access required" });
     next();
   });
+  app.use(statusMonitor());
 }
-app.use(statusMonitor());
 
 app.get("/api/health", async (_req, res) => {
   let dbStatus = "ok";
@@ -150,11 +237,18 @@ main();
 setInterval(async () => {
   const now = new Date();
   try {
+    // Ukončit expirované aukce
     const result = await prisma.auction.updateMany({
       where: { status: "ACTIVE", endTime: { lte: now } },
       data: { status: "ENDED" },
     });
     if (result.count > 0) logger.info({ count: result.count }, "Expired auctions cleaned up");
+
+    // Smazat expirované revoked tokeny
+    const cleaned = await prisma.revokedToken.deleteMany({
+      where: { expiresAt: { lte: now } },
+    });
+    if (cleaned.count > 0) logger.debug({ count: cleaned.count }, "Expired revoked tokens cleaned up");
   } catch (err) {
     logger.error({ err }, "Cleanup error");
   }

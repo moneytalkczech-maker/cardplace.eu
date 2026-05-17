@@ -37,11 +37,20 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   }));
 }
 
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false, state: "cardplace_oauth" } as any));
 
 router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/login" }), (req, res) => {
   const data = req.user as any;
-  res.redirect(`${process.env.CORS_ORIGIN}/auth-callback?token=${data.token}&refreshToken=${data.refreshToken}`);
+  // Nastavit refresh token jako httpOnly cookie — token není v URL!
+  res.cookie("refreshToken", data.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/api/auth",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  // Přesměrování bez tokenu v URL, klient použije refresh cookie
+  res.redirect(`${process.env.CORS_ORIGIN}/auth-callback`);
 });
 
 export default router;

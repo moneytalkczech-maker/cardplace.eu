@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /auth-callback
+Disallow: /reset-password
+Disallow: /api/
+
+Sitemap: https://cardbid.app/sitemap-card-sets.xml
+Sitemap: https://cardbid.app/sitemap-cards.xml

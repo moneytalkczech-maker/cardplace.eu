@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const TEST_USER = {
-  email: `test-${Date.now()}@cardbid.test`,
+  email: `test-${Date.now()}@cardplace.test`,
   username: `tester-${Date.now()}`,
   password: "Test1234_",
 };

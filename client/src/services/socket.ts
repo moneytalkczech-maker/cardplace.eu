@@ -1,46 +1,70 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
+import { useAuthStore } from "../store/authStore";
 
-// Create socket with JWT token in handshake auth
-function getSocket() {
-  const token = localStorage.getItem("token");
-  
-  return io({
+let socket: Socket | null = null;
+
+// V produkci se socket.io připojuje k API serveru (jiný origin než frontend)
+// V developmentu používá Vite proxy → připojení na stejný origin stačí
+const API_URL = import.meta.env.VITE_API_URL || "";
+const SOCKET_URL = API_URL ? API_URL.replace(/\/api\/?$/, "") : undefined;
+
+// Vytvořit novou socket instanci s aktuálním tokenem
+function createSocket(): Socket {
+  const token = useAuthStore.getState().token;
+  return io(SOCKET_URL, {
     autoConnect: false,
     transports: ["websocket", "polling"],
-    auth: {
-      token: token || undefined,
-    },
+    auth: { token: token || undefined },
   });
 }
 
-const socket = getSocket();
-
 export function connectSocket() {
+  const token = useAuthStore.getState().token;
+  if (!token) return; // No token — cannot authenticate
+
+  // Pokud socket neexistuje nebo má starý token, vytvořit nový
+  const currentAuth = socket?.auth as { token?: string } | undefined;
+  if (!socket || currentAuth?.token !== token) {
+    if (socket) {
+      socket.disconnect();
+      socket.removeAllListeners();
+    }
+    socket = createSocket();
+
+    // Při reconnectu vždy aktualizovat token
+    socket.io.on("reconnect_attempt", () => {
+      const currentToken = useAuthStore.getState().token;
+      if (currentToken) {
+        socket!.auth = { token: currentToken };
+      }
+    });
+  }
+
   if (!socket.connected) {
-    // Refresh token before connecting (in case it was updated)
-    const token = localStorage.getItem("token");
-    socket.auth = { token: token || undefined };
     socket.connect();
   }
 }
 
 export function disconnectSocket() {
-  if (socket.connected) {
+  if (socket) {
     socket.disconnect();
   }
 }
 
+export function getSocket(): Socket | null {
+  return socket;
+}
+
 export function joinAuction(auctionId: string) {
-  socket.emit("join-auction", auctionId);
+  if (socket?.connected) socket.emit("join-auction", auctionId);
 }
 
 export function leaveAuction(auctionId: string) {
-  socket.emit("leave-auction", auctionId);
+  if (socket?.connected) socket.emit("leave-auction", auctionId);
 }
 
-// Client no longer needs to send userId - server extracts it from JWT
 export function joinUser() {
-  socket.emit("join-user");
+  if (socket?.connected) socket.emit("join-user");
 }
 
 interface BidEvent {
@@ -58,14 +82,29 @@ interface OutbidEvent {
   newBid: number;
 }
 
+interface ProxyBidEvent {
+  auctionId: string;
+  auctionTitle: string;
+  newBid: number;
+  maxBid: number;
+}
+
 export function onNewBid(callback: (data: BidEvent) => void) {
+  if (!socket) return () => {};
   socket.on("new-bid", callback);
-  return () => { socket.off("new-bid", callback); };
+  return () => { socket!.off("new-bid", callback); };
 }
 
 export function onOutbid(callback: (data: OutbidEvent) => void) {
+  if (!socket) return () => {};
   socket.on("outbid", callback);
-  return () => { socket.off("outbid", callback); };
+  return () => { socket!.off("outbid", callback); };
+}
+
+export function onProxyBid(callback: (data: ProxyBidEvent) => void) {
+  if (!socket) return () => {};
+  socket.on("proxy-bid", callback);
+  return () => { socket!.off("proxy-bid", callback); };
 }
 
 export default socket;

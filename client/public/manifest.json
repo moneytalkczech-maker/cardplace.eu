@@ -1,13 +1,13 @@
 {
-  "name": "CardBid",
-  "short_name": "CardBid",
-  "description": "Tržiště se sběratelskými kartami",
+  "name": "CardPlace.eu",
+  "short_name": "CardPlace",
+  "description": "from passion to collection",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050A12",
   "theme_color": "#00C8FF",
   "icons": [
-    { "src": "/favicon.ico", "sizes": "64x64", "type": "image/x-icon" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
     { "src": "/logo192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/logo512.png", "sizes": "512x512", "type": "image/png" }
   ]

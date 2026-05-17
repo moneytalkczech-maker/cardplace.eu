@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time VPS setup for CardBid
+# One-time VPS setup for CardPlace.eu
 set -euo pipefail
 
 DOMAIN="${1:-}"
@@ -8,18 +8,18 @@ if [ -z "$DOMAIN" ]; then
   exit 1
 fi
 
-echo "=== CardBid VPS Setup ==="
+echo "=== CardPlace.eu VPS Setup ==="
 
 # System dependencies
 sudo apt-get update
 sudo apt-get install -y curl git nginx certbot python3-certbot-nginx nodejs npm
 
 # Create app user
-sudo useradd --system --create-home -s /bin/bash cardbid 2>/dev/null || true
+sudo useradd --system --create-home -s /bin/bash cardplace 2>/dev/null || true
 
 # Create app directory
-sudo mkdir -p /opt/cardbid/server/data
-sudo chown -R cardbid:cardbid /opt/cardbid
+sudo mkdir -p /opt/cardplace/server/data
+sudo chown -R cardplace:cardplace /opt/cardplace
 
 # Install Node.js 22
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
@@ -29,13 +29,13 @@ sudo apt-get install -y nodejs
 sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "admin@$DOMAIN"
 
 # Copy service file
-sudo cp deploy/cardbid-server.service /etc/systemd/system/
+sudo cp deploy/cardplace-server.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 # Copy nginx config
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/cardbid
-sudo sed -i "s/<%= domain %>/$DOMAIN/g" /etc/nginx/sites-available/cardbid
-sudo ln -sf /etc/nginx/sites-available/cardbid /etc/nginx/sites-enabled/
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/cardplace
+sudo sed -i "s/<%= domain %>/$DOMAIN/g" /etc/nginx/sites-available/cardplace
+sudo ln -sf /etc/nginx/sites-available/cardplace /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
 # Set up automatic SSL renewal

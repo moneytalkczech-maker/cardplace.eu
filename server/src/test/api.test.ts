@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import prisma from "../utils/prisma";
 import request from "supertest";
 import express from "express";
 import cors from "cors";
@@ -27,15 +28,17 @@ describe("Auth flow", () => {
   it("POST /api/auth/register — creates a new user", async () => {
      const res = await request(app)
        .post("/api/auth/register")
-       .send({ email: "test@test.com", username: "testuser", password: "Password1" });
-     expect(res.status).toBe(200);
-    token = res.body.token;
-  });
+       .send({ email: "test@test.com", username: "testuser", password: "Password1", acceptedTerms: true, acceptedPrivacy: true });
+      expect(res.status).toBe(200);
+     token = res.body.token;
+     // Auto-verify email for test user
+     await prisma.user.update({ where: { email: "test@test.com" }, data: { emailVerifiedAt: new Date() } });
+   });
 
   it("POST /api/auth/register — rejects duplicate email", async () => {
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "test@test.com", username: "testuser2", password: "Password1" });
+      .send({ email: "test@test.com", username: "testuser2", password: "Password1", acceptedTerms: true, acceptedPrivacy: true });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/already taken/i);
   });
@@ -87,10 +90,12 @@ describe("Auction flow", () => {
   beforeAll(async () => {
     await request(app).post("/api/cards/sync").set("Authorization", `Bearer ${token}`);
     // Register a separate user for bidding
+    const bidderEmail = `bidder${Date.now()}@test.com`;
     const bidder = await request(app)
       .post("/api/auth/register")
-      .send({ email: `bidder${Date.now()}@test.com`, username: `bidder${Date.now()}`, password: "Password1" });
+      .send({ email: bidderEmail, username: `bidder${Date.now()}`, password: "Password1", acceptedTerms: true, acceptedPrivacy: true });
     bidToken = bidder.body.token;
+    await prisma.user.update({ where: { email: bidderEmail }, data: { emailVerifiedAt: new Date() } });
   });
 
   it("POST /api/auctions — creates an auction", async () => {
@@ -98,7 +103,7 @@ describe("Auction flow", () => {
     const res = await request(app)
       .post("/api/auctions")
       .set("Authorization", `Bearer ${token}`)
-      .send({ title: "Test Auction", startingPrice: "10", endTime, cardId: "A1-003" });
+      .send({ title: "Test Auction", startingPrice: "10", endTime, confirmedOriginal: true });
     expect(res.status).toBe(200);
     expect(res.body.id).toBeTruthy();
     auctionId = res.body.id;

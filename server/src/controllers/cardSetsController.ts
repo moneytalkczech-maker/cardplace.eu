@@ -48,7 +48,7 @@ export async function getSet(req: AuthRequest, res: Response) {
 // ─── Admin ───
 
 export async function createSet(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const { name, category, brand, year, description, imageUrl, totalCards } = req.body;
   const slug = slugify(name);
@@ -65,7 +65,7 @@ export async function createSet(req: AuthRequest, res: Response) {
 }
 
 export async function updateSet(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const { name, category, brand, year, description, imageUrl, totalCards } = req.body;
   const setId = req.params.id as string;
@@ -85,7 +85,7 @@ export async function updateSet(req: AuthRequest, res: Response) {
 }
 
 export async function deleteSet(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const setId = req.params.id as string;
   await prisma.cardSet.delete({ where: { id: setId } });
@@ -94,29 +94,43 @@ export async function deleteSet(req: AuthRequest, res: Response) {
 }
 
 export async function importCsv(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const { setId, cards } = req.body;
 
   const set = await prisma.cardSet.findUnique({ where: { id: setId } });
   if (!set) throw new AppError(404, "Set not found");
 
+  const cardData = cards.map((c: Record<string, any>) => ({
+    setId,
+    name: c.name,
+    slug: slugify(`${c.cardNumber || ""}-${c.name}`),
+    cardNumber: c.cardNumber || null,
+    playerName: c.playerName || null,
+    team: c.team || null,
+    rarity: c.rarity || null,
+    parallel: c.parallel || null,
+    type: c.type || null,
+    imageUrl: c.imageUrl || null,
+    description: c.description || null,
+    cardmarketUrl: c.cardmarketUrl || null,
+    ebaySearchQuery: c.ebaySearchQuery || null,
+  }));
+
+  // Batch create cards
   let imported = 0;
-  for (const c of cards) {
-    const slug = slugify(`${c.cardNumber || ""}-${c.name}`);
-    try {
-      await prisma.databaseCard.create({
-        data: {
-          setId, name: c.name, slug,
-          cardNumber: c.cardNumber, playerName: c.playerName,
-          team: c.team, rarity: c.rarity, parallel: c.parallel,
-          type: c.type, imageUrl: c.imageUrl, description: c.description,
-          cardmarketUrl: c.cardmarketUrl, ebaySearchQuery: c.ebaySearchQuery,
-        },
-      });
-      imported++;
-    } catch {
-      // skip duplicates
+  try {
+    const result = await prisma.databaseCard.createMany({
+      data: cardData,
+    });
+    imported = result.count;
+  } catch {
+    // Fallback: create one-by-one on constraint violation (e.g. duplicate slug)
+    for (const c of cardData) {
+      try {
+        await prisma.databaseCard.create({ data: c });
+        imported++;
+      } catch { /* skip duplicates */ }
     }
   }
 

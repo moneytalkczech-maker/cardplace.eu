@@ -3,8 +3,11 @@ import prisma from "../utils/prisma";
 
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "test-secret-key";
+process.env.REFRESH_TOKEN_SECRET = "test-refresh-secret-key";
 process.env.CORS_ORIGIN = "http://localhost:5173";
 process.env.PORT = "4001";
+// NOTE: Tests require PostgreSQL running with valid DATABASE_URL in server/.env
+// After secrets rotation, update server/.env with valid DB credentials before running tests.
 
 beforeAll(async () => {
   await prisma.$connect();

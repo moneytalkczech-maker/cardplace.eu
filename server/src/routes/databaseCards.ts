@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/auth";
+import { authenticate, adminOnly } from "../middleware/auth";
 import { asyncHandler } from "../middleware/errorHandler";
 import * as ctrl from "../controllers/databaseCardsController";
 
@@ -12,10 +12,10 @@ router.get("/:id/prices", asyncHandler(ctrl.getPrices));
 router.get("/:id/price-history", asyncHandler(ctrl.getPriceHistory));
 
 // Admin
-router.post("/", authenticate, asyncHandler(ctrl.createCard));
-router.put("/:id", authenticate, asyncHandler(ctrl.updateCard));
-router.delete("/:id", authenticate, asyncHandler(ctrl.deleteCard));
-router.post("/:id/refresh-prices", authenticate, asyncHandler(ctrl.refreshPrice));
-router.post("/refresh-prices", authenticate, asyncHandler(ctrl.refreshAllPrices));
+router.post("/", authenticate, adminOnly, asyncHandler(ctrl.createCard));
+router.put("/:id", authenticate, adminOnly, asyncHandler(ctrl.updateCard));
+router.delete("/:id", authenticate, adminOnly, asyncHandler(ctrl.deleteCard));
+router.post("/:id/refresh-prices", authenticate, adminOnly, asyncHandler(ctrl.refreshPrice));
+router.post("/refresh-prices", authenticate, adminOnly, asyncHandler(ctrl.refreshAllPrices));
 
 export default router;

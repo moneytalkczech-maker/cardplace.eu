@@ -87,7 +87,7 @@ export async function getCard(req: Request, res: Response) {
 // ─── Admin ───
 
 export async function createCard(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const { setId, name, cardNumber, playerName, team, rarity, parallel, type, imageUrl, description, cardmarketUrl, ebaySearchQuery } = req.body;
   const slug = slugify(`${cardNumber || ""}-${name}`);
@@ -104,7 +104,7 @@ export async function createCard(req: AuthRequest, res: Response) {
 }
 
 export async function updateCard(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const id = req.params.id as string;
   const allowed = ["name", "cardNumber", "playerName", "team", "rarity", "parallel", "type", "imageUrl", "description", "cardmarketUrl", "ebaySearchQuery"];
@@ -121,7 +121,7 @@ export async function updateCard(req: AuthRequest, res: Response) {
 }
 
 export async function deleteCard(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const id = req.params.id as string;
   await prisma.databaseCard.delete({ where: { id } });
@@ -157,7 +157,7 @@ export async function getPriceHistory(req: Request, res: Response) {
 }
 
 export async function refreshPrice(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   const id = req.params.id as string;
   const cardmarketResult = await updateCardPrices(id);
@@ -167,7 +167,7 @@ export async function refreshPrice(req: AuthRequest, res: Response) {
 }
 
 export async function refreshAllPrices(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Admin only");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Admin only");
 
   runPriceUpdate().catch((err) => logger.error({ err }, "Price update job failed"));
   res.json({ message: "Price update started" });

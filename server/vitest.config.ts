@@ -3,7 +3,12 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     globals: true,
-    env: { NODE_ENV: "test" },
-    setupFiles: ["./src/test/setup.ts"],
+    environment: "node",
+    include: ["tests/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      exclude: ["node_modules/", "dist/", "tests/"],
+    },
   },
 });

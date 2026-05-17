@@ -1,11 +1,11 @@
 [Unit]
-Description=CardBid Server
+Description=CardPlace.eu Server
 After=network.target
 
 [Service]
 Type=simple
-User=cardbid
-WorkingDirectory=/opt/cardbid/server
+User=cardplace
+WorkingDirectory=/opt/cardplace/server
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
 RestartSec=5
@@ -23,7 +23,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=/opt/cardbid/server/data
+ReadWritePaths=/opt/cardplace/server/data
 
 [Install]
 WantedBy=multi-user.target

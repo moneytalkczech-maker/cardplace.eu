@@ -1,26 +1,81 @@
 <!DOCTYPE html>
 <html lang="cs" data-theme="dark">
-<head>
+<head prefix="og: https://ogp.me/ns#">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description" content="CardBid — AI tržiště se sběratelskými kartami. Skenuj, draž, prodávej a sbírej v reálném čase." />
-  <meta name="keywords" content="karty, aukce, sběratelství, trading cards, Pokémon, cardmarket" />
-  <meta property="og:title" content="CardBid — Aukce sběratelských karet" />
-  <meta property="og:description" content="AI tržiště se sběratelskými kartami. Skenuj s AI, draž v reálném čase." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CardPlace.eu — from passion to collection. Aukční platforma pro sběratelské karty. AI skenování, živé aukce a bezpečné transakce pro Pokémon, Magic, Yu-Gi-Oh! a sportovní karty." />
+  <meta name="keywords" content="aukce karet, sběratelské karty, Pokémon karty, Magic karty, Yu-Gi-Oh, trading cards, aukční portál, karetní tržiště" />
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="language" content="Czech" />
+  <link rel="canonical" href="https://cardplace.eu" />
+  <meta name="google-site-verification" content="" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="CardPlace.eu — from passion to collection" />
+  <meta property="og:description" content="Aukční platforma pro sběratele trading cards. AI skenování, živé příhozy a ověření prodejci." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://cardbid.app" />
-  <meta property="og:image" content="https://cardbid.app/og-image.png" />
+  <meta property="og:url" content="https://cardplace.eu" />
+  <meta property="og:image" content="https://cardplace.eu/og-image.svg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="CardPlace.eu aukční platforma" />
   <meta property="og:locale" content="cs_CZ" />
+  <meta property="og:site_name" content="CardPlace.eu" />
+
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="CardBid — Aukce sběratelských karet" />
-  <meta name="twitter:description" content="AI tržiště se sběratelskými kartami. Skenuj s AI, draž v reálném čase." />
-  <meta name="twitter:image" content="https://cardbid.app/og-image.png" />
+  <meta name="twitter:title" content="CardPlace.eu — from passion to collection" />
+  <meta name="twitter:description" content="Aukční platforma pro sběratele trading cards. AI skenování, živé příhozy a ověření prodejci." />
+  <meta name="twitter:image" content="https://cardplace.eu/og-image.svg" />
+  <meta name="twitter:image:alt" content="CardPlace.eu aukční platforma" />
+
+  <!-- Hreflang -->
+  <link rel="alternate" href="https://cardplace.eu" hreflang="cs" />
+  <link rel="alternate" href="https://cardplace.eu/en" hreflang="en" />
+  <link rel="alternate" href="https://cardplace.eu" hreflang="x-default" />
+
+  <!-- Icons -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#00C8FF" />
-  <title>CardBid — Aukce sběratelských karet</title>
+
+  <title>CardPlace.eu — from passion to collection | Aukce sběratelských karet</title>
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CardPlace.eu",
+    "url": "https://cardplace.eu",
+    "description": "Aukční platforma pro sběratele trading cards",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://cardplace.eu/auctions?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "CardPlace s.r.o.",
+    "url": "https://cardplace.eu",
+    "areaServed": "CZ",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "info@cardplace.eu",
+      "contactType": "customer support",
+      "availableLanguage": ["Czech", "English"]
+    }
+  }
+  </script>
 </head>
   <body>
     <div id="root"></div>

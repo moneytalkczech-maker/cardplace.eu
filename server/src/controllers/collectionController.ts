@@ -22,21 +22,13 @@ export async function getCollectionValue(req: AuthRequest, res: Response) {
 
 export async function addItem(req: AuthRequest, res: Response) {
   const { cardId, cardName, cardSet, cardRarity, cardImage, quantity, purchasePrice, condition } = req.body;
-  const existing = await prisma.collectionItem.findFirst({
-    where: { userId: req.userId!, cardId },
-  });
-  if (existing) {
-    const updated = await prisma.collectionItem.update({
-      where: { id: existing.id },
-      data: { quantity: existing.quantity + quantity },
-    });
-    res.json(updated);
-    return;
-  }
-  const item = await prisma.collectionItem.create({
-    data: {
+  const item = await prisma.collectionItem.upsert({
+    where: { userId_cardId: { userId: req.userId!, cardId } },
+    update: { quantity: { increment: quantity || 1 } },
+    create: {
       userId: req.userId!, cardId, cardName, cardSet, cardRarity, cardImage,
-      quantity, purchasePrice: purchasePrice ? parseFloat(purchasePrice) : undefined,
+      quantity: quantity || 1,
+      purchasePrice: purchasePrice ? parseFloat(purchasePrice) : undefined,
       condition: condition || "NM",
     },
   });

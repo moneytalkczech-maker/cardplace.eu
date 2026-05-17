@@ -21,13 +21,13 @@ Certbot je nastaven v crontabu na automatické obnovení každé 3:00 ráno.
 deploy/
   setup-vps.sh        — jednorázové nastavení serveru
   nginx.conf          — reverse proxy s SSL
-  cardbid-server.service  — systemd service
+  cardplace-server.service  — systemd service
 deploy.sh             — deploy skript
 ```
 
 ## Manuální kroky (jen první deploy)
 
-1. Nastavit environment v `/opt/cardbid/server/.env`:
+1. Nastavit environment v `/opt/cardplace/server/.env`:
 ```env
 JWT_SECRET=<strong-random-secret>
 REFRESH_TOKEN_SECRET=<different-strong-random-secret>
@@ -40,6 +40,6 @@ LOG_LEVEL=info
 
 2. Zkontrolovat že service běží:
 ```bash
-sudo systemctl status cardbid-server
+sudo systemctl status cardplace-server
 sudo systemctl status nginx
 ```

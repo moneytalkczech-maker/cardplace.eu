@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -12,18 +12,29 @@ model User {
   email             String       @unique
   username          String       @unique
   password          String
-  role              String       @default("BUYER")
+  role              String       @default("user") // user | moderator | admin
+  status            String       @default("active") // active | suspended | banned
   avatarUrl         String?
   trustScore        Int          @default(0)
   totalSales        Int          @default(0)
   credits           Int          @default(3)
   verified          Boolean      @default(false)
-  verifiedType      String?      @default("none") // none | paid | founder
+  verifiedType      String?      @default("none")
   founder           Boolean      @default(false)
   founderSince      DateTime?
   vipUntil          DateTime?
   stripeCustomerId  String?      @unique
   lastDailyCredit   DateTime?
+  acceptedTermsAt   DateTime?
+  acceptedPrivacyAt DateTime?
+  createdIp         String?
+  userAgent         String?
+  emailVerifiedAt   DateTime?
+  emailVerifyToken  String?
+  emailVerifyExpiresAt DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  passwordChangedAt DateTime?
   createdAt         DateTime     @default(now())
   auctions          Auction[]
   bids              Bid[]
@@ -41,6 +52,45 @@ model User {
   reviewsReceived   Review[]   @relation("Reviewed")
   subscriptions     Subscription[]
   promotions        Promotion[]
+  reports           Report[]     @relation("Reporter")
+  auditLogs         AuditLog[]
+  adminNotes        AdminNote[]  @relation("AdminNoteAuthor")
+  revokedTokens     RevokedToken[]
+  uploads           Upload[]
+
+  @@index([role])
+  @@index([status])
+  @@index([passwordResetToken])
+  @@index([emailVerifyToken])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  auctionId   String
+  reporterId  String
+  reason      String   // fake | stolen_image | scam | inappropriate | suspicious_price | other
+  description String?
+  status      String   @default("pending") // pending | reviewed | resolved | rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  auction     Auction  @relation(fields: [auctionId], references: [id])
+  reporter    User     @relation("Reporter", fields: [reporterId], references: [id])
+  @@index([status])
+  @@index([auctionId])
+  @@index([reporterId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  entityType  String?
+  entityId    String?
+  metadata    String?  // JSON
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id])
 }
 
 model CardSet {
@@ -53,6 +103,11 @@ model CardSet {
   description  String?
   imageUrl     String?
   totalCards   Int?
+
+  // 🔒 Legal audit
+  dataSource      String?
+  licenseStatus   String?  @default("needs_review")
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   cards        DatabaseCard[]
@@ -87,6 +142,18 @@ model DatabaseCard {
   currency            String?  @default("CZK")
   pricesUpdatedAt     DateTime?
 
+  // 🔒 Legal audit – sledování původu dat
+  dataSource          String?  // "limitlesstcg" | "pokemontcg_api" | "scryfall" | "ygoprodeck" | "user_uploaded" | "manual"
+  sourceUrl           String?
+  licenseStatus       String?  @default("needs_review") // own_data | user_uploaded | api_allowed | attribution_required | unknown | prohibited | needs_review
+
+  // 🤖 AI data
+  aiGenerated         Boolean? @default(false)
+  aiConfidence        Float?
+  aiModel             String?
+  aiGeneratedAt       DateTime?
+  manuallyVerified    Boolean? @default(false)
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -113,6 +180,11 @@ model CardPriceSnapshot {
   lastSoldPrice   Float?
 
   rawData         String?
+
+  // 🔒 Legal audit
+  dataSource      String?  // "cardmarket_api" | "ebay_api" | "cardbid_transactions" | "manual"
+  licenseStatus   String?  @default("needs_review")
+
   createdAt       DateTime @default(now())
 
   @@index([cardId])
@@ -120,7 +192,7 @@ model CardPriceSnapshot {
   @@index([createdAt])
 }
 
-// Původní Card model pro aukce (zůstává)
+// Card model pro aukce
 model Card {
   id             String    @id @default(cuid())
   name           String
@@ -131,6 +203,18 @@ model Card {
   rarity         String?
   imageUrl       String?
   estimatedPrice Float?
+  // 🔒 Legal audit
+  status         String    @default("active") // active | archived | hidden
+  dataSource     String?   // "manual" | "import" | "api" | "user"
+  sourceUrl      String?
+  licenseStatus  String?   @default("needs_review")
+  // 🤖 AI data
+  aiGenerated    Boolean?  @default(false)
+  aiConfidence   Float?
+  aiModel        String?
+  aiGeneratedAt  DateTime?
+  manuallyVerified Boolean? @default(false)
+  // Relations
   auctions       Auction[]
 }
 
@@ -138,13 +222,23 @@ model Auction {
   id            String     @id @default(cuid())
   title         String
   description   String?
+  condition     String     @default("NM") // NM | LP | MP | HP | DMG
   imageUrl      String?
   startingPrice Float
   currentPrice  Float
   minIncrement  Float      @default(1)
   endTime       DateTime
-  status        String     @default("ACTIVE")
+  status        String     @default("ACTIVE") // draft | active | ended | cancelled | pending_review | removed
   featured      Boolean    @default(false)
+  buyNowPrice   Float?
+  buyNowUsed    Boolean    @default(false)
+  // 🤖 AI risk assessment
+  aiRiskScore   Float?
+  aiRiskLevel   String?    // "low" | "medium" | "high" | "critical"
+  aiRiskReason  String?
+  // Admin review
+  reviewedBy    String?
+  reviewedAt    DateTime?
   createdAt     DateTime   @default(now())
   userId        String
   cardId        String?
@@ -154,16 +248,33 @@ model Auction {
   watchlists    Watchlist[]
   transaction   Transaction?
   promotions    Promotion[]
+  reports       Report[]
+
+  @@index([status])
+  @@index([endTime])
+  @@index([userId])
+  @@index([status, endTime])
+  @@index([status, createdAt])
+  @@index([userId, status])
+  @@index([featured])
+  @@index([cardId])
+  @@index([title])
+  @@index([status, featured])
 }
 
 model Bid {
   id        String   @id @default(cuid())
   amount    Float
+  maxBid    Float?
   createdAt DateTime @default(now())
   userId    String
   auctionId String
   user      User     @relation(fields: [userId], references: [id])
   auction   Auction  @relation(fields: [auctionId], references: [id])
+
+  @@index([auctionId])
+  @@index([userId])
+  @@index([auctionId, amount])
 }
 
 model Watchlist {
@@ -174,6 +285,8 @@ model Watchlist {
   user      User     @relation(fields: [userId], references: [id])
   auction   Auction  @relation(fields: [auctionId], references: [id])
   @@unique([userId, auctionId])
+  @@index([userId])
+  @@index([auctionId])
 }
 
 model Notification {
@@ -185,6 +298,8 @@ model Notification {
   userId    String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+  @@index([read])
 }
 
 model Transaction {
@@ -204,6 +319,11 @@ model Transaction {
   buyer                User           @relation("BuyerTransactions", fields: [buyerId], references: [id])
   seller               User           @relation("SellerTransactions", fields: [sellerId], references: [id])
   review               Review?
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([stripeSessionId])
+  @@index([stripePaymentIntentId])
 }
 
 model Subscription {
@@ -247,8 +367,8 @@ model MonetizationConfig {
   feeVip        Float    @default(3)
   // Ceny v Kč
   verifiedPrice Float    @default(199)
-  vipMonthly    Float    @default(299)
-  vipYearly     Float    @default(2990)
+  vipMonthly    Float    @default(199)
+  vipYearly     Float    @default(1990)
   boostTop      Float    @default(19)
   boostHomepage Float    @default(49)
   boostHighlight Float   @default(15)
@@ -284,7 +404,9 @@ model CollectionItem {
   purchasePrice Float?
   condition     String   @default("NM")
   createdAt     DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([userId, cardId])
+  @@index([userId])
 }
 
 model Follow {
@@ -295,6 +417,8 @@ model Follow {
   follower    User     @relation("FollowedBy", fields: [followerId], references: [id])
   following   User     @relation("Following", fields: [followingId], references: [id])
   @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }
 
 model WantedCard {
@@ -307,7 +431,117 @@ model WantedCard {
   maxPrice    Float?
   status      String   @default("ACTIVE")
   createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([userId, cardId])
+  @@index([userId])
+}
+
+// ─── Admin modely ─────────────────────────────────────────────
+
+model RevokedToken {
+  id        String   @id @default(cuid())
+  jti       String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([jti])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AdminNote {
+  id        String   @id @default(cuid())
+  content   String
+  entityType String  // "user" | "auction" | "report"
+  entityId  String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation("AdminNoteAuthor", fields: [authorId], references: [id])
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string | number | boolean | json
+  group     String   @default("general") // general | fees | legal | ai | email
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LegalDocument {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  locale    String   @default("cs")
+  version   Int      @default(1)
+  published Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  subject   String
+  bodyHtml  String
+  locale    String   @default("cs")
+  variables String?  // JSON seznam proměnných
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Upload {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  url         String
+  entityType  String?  // "auction" | "avatar" | "card" | "document"
+  entityId    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType])
+}
+
+model PriceEstimate {
+  id          String   @id @default(cuid())
+  cardId      String
+  cardName    String
+  source      String   // "ebay_api" | "cardmarket_api" | "cardbid_avg" | "ai_model"
+  priceLow    Float?
+  priceAvg    Float?
+  priceHigh   Float?
+  currency    String   @default("CZK")
+  confidence  Float?   // 0-1
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+}
+
+model CardDataSource {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  type        String   // "api" | "scraper" | "manual" | "import"
+  baseUrl     String?
+  licenseUrl  String?
+  attribution String?
+  status      String   @default("active") // active | inactive | blocked
+  rateLimit   Int?
+  lastSyncAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Referral {

@@ -4,7 +4,7 @@ import prisma from "../utils/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import logger from "../utils/logger";
-import { trustDeltaForTransaction } from "../utils/trust";
+import { trustDeltaForTransaction, trustDeltaForReview } from "../utils/trust";
 import { calculateFee } from "../utils/fees";
 import { sendPaymentReceivedEmail, sendWonEmail, sendSoldEmail } from "../utils/email";
 
@@ -80,12 +80,13 @@ export async function handleWebhook(req: AuthRequest, res: Response) {
   const sig = req.headers["stripe-signature"] as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event: any;
-  if (endpointSecret) {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-  } else {
-    event = req.body;
+  if (!endpointSecret) {
+    logger.error("STRIPE_WEBHOOK_SECRET is not configured — webhooks will be rejected");
+    throw new AppError(500, "Webhook secret not configured");
   }
+
+  let event: any;
+  event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
@@ -95,26 +96,41 @@ export async function handleWebhook(req: AuthRequest, res: Response) {
 
     if (auctionId && buyerId && sellerId) {
       const paymentIntentId = session.payment_intent as string;
-      const transaction = await prisma.transaction.findUnique({ where: { auctionId } });
 
-      if (transaction && transaction.status !== "COMPLETED") {
-        const winningBid = await prisma.bid.findFirst({ where: { auctionId }, orderBy: { amount: "desc" } });
-        const feeResult = winningBid ? await calculateFee(winningBid.amount, sellerId) : { fee: 0, feePercent: 0, netAmount: 0 };
+      // Validace: porovnat zaplacenou částku s vítěznou nabídkou
+      const winningBid = await prisma.bid.findFirst({ where: { auctionId }, orderBy: { amount: "desc" } });
+      if (!winningBid) {
+        logger.error({ auctionId }, "Webhook: no winning bid found");
+        return res.status(400).json({ error: "No winning bid" });
+      }
 
-        await prisma.transaction.update({
-          where: { auctionId },
-          data: {
-            status: "COMPLETED",
-            stripePaymentIntentId: paymentIntentId,
-            fee: feeResult.fee,
-            feePercent: feeResult.feePercent,
-            netAmount: feeResult.netAmount,
-          },
-        });
+      const sessionAmountCents = session.amount_total as number;
+      const expectedAmountCents = Math.round(winningBid.amount * 100);
+      if (sessionAmountCents !== expectedAmountCents) {
+        logger.error({ auctionId, sessionAmountCents, expectedAmountCents }, "Webhook: amount mismatch — potential fraud");
+        return res.status(400).json({ error: "Payment amount mismatch" });
+      }
 
-        if (winningBid) {
+      // Atomická operace v transakci: update transaction + trust scores + notifications
+      await prisma.$transaction(async (tx) => {
+        const transaction = await tx.transaction.findUnique({ where: { auctionId } });
+
+        if (transaction && transaction.status !== "COMPLETED") {
+          const feeResult = await calculateFee(winningBid.amount, sellerId);
+
+          await tx.transaction.update({
+            where: { auctionId },
+            data: {
+              status: "COMPLETED",
+              stripePaymentIntentId: paymentIntentId,
+              fee: feeResult.fee,
+              feePercent: feeResult.feePercent,
+              netAmount: feeResult.netAmount,
+            },
+          });
+
           const delta = trustDeltaForTransaction(winningBid.amount);
-          await prisma.user.update({
+          await tx.user.update({
             where: { id: sellerId },
             data: {
               trustScore: { increment: delta },
@@ -122,29 +138,30 @@ export async function handleWebhook(req: AuthRequest, res: Response) {
               credits: { increment: 1 },
             },
           });
-          await prisma.user.update({ where: { id: buyerId }, data: { trustScore: { increment: 1 } } });
+          await tx.user.update({ where: { id: buyerId }, data: { trustScore: { increment: 1 } } });
+
+          await tx.notification.create({
+            data: {
+              message: "Aukce byla zaplacena!",
+              type: "PAYMENT",
+              link: `/auctions/${auctionId}`,
+              userId: sellerId,
+            },
+          });
         }
+      });
 
-        await prisma.notification.create({
-          data: {
-            message: "Aukce byla zaplacena!",
-            type: "PAYMENT",
-            link: `/auctions/${auctionId}`,
-            userId: sellerId,
-          },
-        });
+      // Emaily mimo transakci (neblokující)
+      const [auction, buyer, seller] = await Promise.all([
+        prisma.auction.findUnique({ where: { id: auctionId }, select: { title: true } }),
+        prisma.user.findUnique({ where: { id: buyerId }, select: { email: true, username: true } }),
+        prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, username: true } }),
+      ]);
+      if (seller?.email && auction) sendPaymentReceivedEmail(seller.email, seller.username, auction.title, auctionId).catch(() => {});
+      if (buyer?.email && auction) sendWonEmail(buyer.email, buyer.username, auction.title, auctionId).catch(() => {});
+      if (seller?.email && auction) sendSoldEmail(seller.email, seller.username, auction.title).catch(() => {});
 
-        const [auction, buyer, seller] = await Promise.all([
-          prisma.auction.findUnique({ where: { id: auctionId }, select: { title: true } }),
-          prisma.user.findUnique({ where: { id: buyerId }, select: { email: true, username: true } }),
-          prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, username: true } }),
-        ]);
-        if (seller?.email && auction) sendPaymentReceivedEmail(seller.email, seller.username, auction.title, auctionId).catch(() => {});
-        if (buyer?.email && auction) sendWonEmail(buyer.email, buyer.username, auction.title, auctionId).catch(() => {});
-        if (seller?.email && auction) sendSoldEmail(seller.email, seller.username, auction.title).catch(() => {});
-
-        logger.info({ auctionId, buyerId, sellerId }, "Payment completed");
-      }
+      logger.info({ auctionId, buyerId, sellerId }, "Payment completed");
     }
   }
 
@@ -173,7 +190,7 @@ export async function submitReview(req: AuthRequest, res: Response) {
 
   await prisma.user.update({
     where: { id: transaction.sellerId },
-    data: { trustScore: { increment: rating - 3 } },
+    data: { trustScore: { increment: trustDeltaForReview(rating) } },
   });
 
   res.json(review);

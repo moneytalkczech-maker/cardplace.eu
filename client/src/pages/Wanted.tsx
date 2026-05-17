@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Plus, X, Target, Gavel, Loader2 } from "lucide-react";
+import { Search, Plus, X, Target, Gavel, Loader2, ChevronDown } from "lucide-react";
 import { wantedApi } from "../services/api";
 import { useAuthStore } from "../store/authStore";
+import { toast } from "../components/Toast";
+import { useTranslation } from "../hooks/useTranslation";
 import { searchCards } from "../lib/CardsDB";
 import type { MarketCard } from "../lib/CardsDB";
+
+const ITEMS_PER_PAGE = 20;
 
 interface WantedItem {
   id: string;
@@ -19,8 +23,10 @@ interface WantedItem {
 }
 
 export default function Wanted() {
+  const { t } = useTranslation();
   const { token } = useAuthStore();
   const [wanted, setWanted] = useState<WantedItem[]>([]);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showForm, setShowForm] = useState(false);
   const [cardSearch, setCardSearch] = useState("");
   const [cardResults, setCardResults] = useState<MarketCard[]>([]);
@@ -31,7 +37,7 @@ export default function Wanted() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    wantedApi.getAll().then(setWanted).catch(() => {}).finally(() => setLoading(false));
+    wantedApi.getAll().then(setWanted).catch(() => toast("error", t("wanted.loadError"))).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -61,7 +67,7 @@ export default function Wanted() {
       setCardSearch("");
       setDescription("");
       setMaxPrice("");
-    } catch {}
+    } catch { toast("error", t("wanted.createError")); }
     setSubmitting(false);
   };
 
@@ -69,7 +75,7 @@ export default function Wanted() {
     try {
       await wantedApi.remove(id);
       setWanted((prev) => prev.map((w) => w.id === id ? { ...w, status: "FULFILLED" } : w));
-    } catch {}
+    } catch { toast("error", t("wanted.deleteError")); }
   };
 
   return (
@@ -77,13 +83,13 @@ export default function Wanted() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold font-heading flex items-center gap-3">
-            <Target className="h-7 w-7 text-[#00C8FF]" /> Hledané karty
+            <Target className="h-7 w-7 text-[#00C8FF]" /> {t("wanted.title")}
           </h1>
-          <p className="text-gray-500 mt-1">Dej vědět, co sháníš — prodejci ti nabídnou</p>
+          <p className="text-gray-500 mt-1">{t("wanted.subtitle")}</p>
         </div>
         {token && (
           <button onClick={() => setShowForm(!showForm)} className="btn-primary font-heading">
-            <Plus className="h-4 w-4" /> Přidat poptávku
+            <Plus className="h-4 w-4" /> {t("wanted.addWanted")}
           </button>
         )}
       </div>
@@ -91,11 +97,11 @@ export default function Wanted() {
       {/* Add form */}
       {showForm && (
         <div className="card mb-8">
-          <h2 className="font-heading font-bold text-lg mb-4">Nová poptávka</h2>
+          <h2 className="font-heading font-bold text-lg mb-4">{t("wanted.newWanted")}</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-heading font-semibold mb-1.5">Karta</label>
-              <input className="input" placeholder="Název karty..." value={cardSearch} onChange={(e) => setCardSearch(e.target.value)} />
+              <label className="block text-sm font-heading font-semibold mb-1.5">{t("wanted.card")}</label>
+              <input className="input" placeholder={t("wanted.cardPlaceholder")} value={cardSearch} onChange={(e) => setCardSearch(e.target.value)} />
               {cardResults.length > 0 && (
                 <div className="mt-1 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[#0B1220] max-h-40 overflow-y-auto">
                   {cardResults.map((c) => (
@@ -114,15 +120,15 @@ export default function Wanted() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-heading font-semibold mb-1.5">Popis (volitelné)</label>
-              <textarea className="input min-h-[60px]" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Stav, edice, specifikace..." />
+              <label className="block text-sm font-heading font-semibold mb-1.5">{t("wanted.description")}</label>
+              <textarea className="input min-h-[60px]" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("wanted.descriptionPlaceholder")} />
             </div>
             <div>
-              <label className="block text-sm font-heading font-semibold mb-1.5">Max. cena (volitelné)</label>
-              <input type="number" className="input" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Např. 1000" />
+              <label className="block text-sm font-heading font-semibold mb-1.5">{t("wanted.maxPrice")}</label>
+              <input type="number" className="input" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder={t("wanted.maxPricePlaceholder")} />
             </div>
             <button onClick={handleSubmit} disabled={submitting || !selectedCard} className="btn-primary font-heading">
-              {submitting ? "Ukládám..." : "Přidat poptávku"}
+              {submitting ? t("wanted.submitting") : t("wanted.submit")}
             </button>
           </div>
         </div>
@@ -136,12 +142,12 @@ export default function Wanted() {
       ) : wanted.length === 0 ? (
         <div className="text-center py-20">
           <Target className="h-16 w-16 mx-auto mb-4 text-gray-600" />
-          <p className="text-lg font-heading font-bold text-gray-400">Zatím nikdo nic nehledá</p>
-          <p className="text-sm text-gray-600 mt-1">Buď první a přidej poptávku</p>
+          <p className="text-lg font-heading font-bold text-gray-400">{t("wanted.emptyList")}</p>
+          <p className="text-sm text-gray-600 mt-1">{t("wanted.emptyHint")}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {wanted.map((w) => (
+          {wanted.slice(0, visibleCount).map((w) => (
             <div key={w.id} className={`card ${w.status === "FULFILLED" ? "opacity-40" : ""}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1">
@@ -167,7 +173,7 @@ export default function Wanted() {
                   {w.status === "ACTIVE" && (
                     <>
                       <Link to={`/auctions?search=${encodeURIComponent(w.cardName)}`} className="btn-secondary text-sm font-heading">
-                        <Gavel className="h-4 w-4" /> Nabídnout
+                        <Gavel className="h-4 w-4" /> {t("wanted.offer")}
                       </Link>
                       {token && (
                         <button onClick={() => handleRemove(w.id)} className="btn-ghost text-sm">
@@ -177,12 +183,23 @@ export default function Wanted() {
                     </>
                   )}
                   {w.status === "FULFILLED" && (
-                    <span className="badge-green">Vyřešeno</span>
+                    <span className="badge-green">{t("wanted.fulfilled")}</span>
                   )}
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {visibleCount < wanted.length && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => setVisibleCount((p) => p + ITEMS_PER_PAGE)}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-[rgba(0,200,255,0.2)] text-[#00C8FF] font-heading font-bold hover:bg-[rgba(0,200,255,0.08)] transition-all"
+          >
+            <ChevronDown className="h-4 w-4" />
+            {t("wanted.loadMore")} ({wanted.length - visibleCount} {t("wanted.remaining")})
+          </button>
         </div>
       )}
     </div>

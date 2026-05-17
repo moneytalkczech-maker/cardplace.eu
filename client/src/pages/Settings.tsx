@@ -2,8 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Save, Camera, Lock, User, Mail, Loader2 } from "lucide-react";
 import api from "../services/api";
 import { useAuthStore } from "../store/authStore";
+import { useTranslation } from "../hooks/useTranslation";
+import { toast } from "../components/Toast";
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { user, loadUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,9 +38,9 @@ export default function Settings() {
     try {
       await api.patch("/profile", { username, email });
       await loadUser();
-      setProfileMsg({ type: "success", text: "Profil byl aktualizován" });
+      setProfileMsg({ type: "success", text: t("settings.profileUpdated") });
     } catch (err: any) {
-      setProfileMsg({ type: "error", text: err.response?.data?.error || "Chyba při ukládání profilu" });
+      setProfileMsg({ type: "error", text: err.response?.data?.error || t("settings.profileSaveError") });
     }
     setSavingProfile(false);
   };
@@ -46,7 +49,7 @@ export default function Settings() {
     e.preventDefault();
     setPasswordMsg(null);
     if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: "error", text: "Hesla se neshodují" });
+      setPasswordMsg({ type: "error", text: t("settings.passwordsDontMatch") });
       return;
     }
     setSavingPassword(true);
@@ -55,9 +58,9 @@ export default function Settings() {
       setPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordMsg({ type: "success", text: "Heslo bylo změněno" });
+      setPasswordMsg({ type: "success", text: t("settings.passwordChanged") });
     } catch (err: any) {
-      setPasswordMsg({ type: "error", text: err.response?.data?.error || "Chyba při změně hesla" });
+      setPasswordMsg({ type: "error", text: err.response?.data?.error || t("settings.passwordChangeError") });
     }
     setSavingPassword(false);
   };
@@ -74,9 +77,9 @@ export default function Settings() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       await loadUser();
-      setAvatarMsg({ type: "success", text: "Profilový obrázek byl nahrán" });
+      setAvatarMsg({ type: "success", text: t("settings.avatarUploaded") });
     } catch (err: any) {
-      setAvatarMsg({ type: "error", text: err.response?.data?.error || "Chyba při nahrávání obrázku" });
+      setAvatarMsg({ type: "error", text: err.response?.data?.error || t("settings.avatarUploadError") });
     }
     setUploadingAvatar(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -84,12 +87,12 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 text-white space-y-8">
-      <h1 className="text-3xl font-bold font-heading">Nastavení profilu</h1>
+      <h1 className="text-3xl font-bold font-heading">{t("settings.title")}</h1>
 
       <div className="rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-6">
         <div className="flex items-center gap-3 mb-6">
           <User className="h-6 w-6 text-[#00C8FF]" />
-          <h2 className="text-xl font-bold font-heading">Základní informace</h2>
+          <h2 className="text-xl font-bold font-heading">{t("settings.basicInfo")}</h2>
         </div>
 
         {profileMsg && (
@@ -102,20 +105,20 @@ export default function Settings() {
           <div>
             <label className="block text-sm font-heading font-semibold mb-1.5">
               <Mail className="h-4 w-4 inline mr-1.5 text-gray-500" />
-              Email
+              {t("settings.email")}
             </label>
             <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div>
             <label className="block text-sm font-heading font-semibold mb-1.5">
               <User className="h-4 w-4 inline mr-1.5 text-gray-500" />
-              Uživatelské jméno
+              {t("settings.username")}
             </label>
             <input type="text" className="input" value={username} onChange={(e) => setUsername(e.target.value)} required />
           </div>
           <button type="submit" disabled={savingProfile} className="btn-primary font-heading">
             {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Uložit změny
+            {t("settings.saveChanges")}
           </button>
         </form>
       </div>
@@ -123,7 +126,7 @@ export default function Settings() {
       <div className="rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-6">
         <div className="flex items-center gap-3 mb-6">
           <Lock className="h-6 w-6 text-[#00C8FF]" />
-          <h2 className="text-xl font-bold font-heading">Bezpečnost</h2>
+          <h2 className="text-xl font-bold font-heading">{t("settings.security")}</h2>
         </div>
 
         {passwordMsg && (
@@ -134,20 +137,20 @@ export default function Settings() {
 
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-heading font-semibold mb-1.5">Současné heslo</label>
+            <label className="block text-sm font-heading font-semibold mb-1.5">{t("settings.currentPassword")}</label>
             <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-heading font-semibold mb-1.5">Nové heslo</label>
+            <label className="block text-sm font-heading font-semibold mb-1.5">{t("settings.newPassword")}</label>
             <input type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
           </div>
           <div>
-            <label className="block text-sm font-heading font-semibold mb-1.5">Potvrdit nové heslo</label>
+            <label className="block text-sm font-heading font-semibold mb-1.5">{t("settings.confirmNewPassword")}</label>
             <input type="password" className="input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} />
           </div>
           <button type="submit" disabled={savingPassword} className="btn-primary font-heading">
             {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-            Změnit heslo
+            {t("settings.changePassword")}
           </button>
         </form>
       </div>
@@ -155,7 +158,7 @@ export default function Settings() {
       <div className="rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-6">
         <div className="flex items-center gap-3 mb-6">
           <Camera className="h-6 w-6 text-[#00C8FF]" />
-          <h2 className="text-xl font-bold font-heading">Profilový obrázek</h2>
+          <h2 className="text-xl font-bold font-heading">{t("settings.avatar")}</h2>
         </div>
 
         {avatarMsg && (
@@ -167,13 +170,13 @@ export default function Settings() {
         <div className="flex items-center gap-6">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#009DFF] to-[#00C8FF] text-3xl font-bold font-heading shadow-[0_0_30px_rgba(0,200,255,0.2)] overflow-hidden">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+              <img src={user.avatarUrl} alt={t("settings.avatar")} loading="lazy" className="h-full w-full object-cover" />
             ) : (
               user?.username?.[0]?.toUpperCase() || "?"
             )}
           </div>
           <div className="flex-1">
-            <p className="text-sm text-gray-400 mb-3">Nahrajte obrázek ve formátu PNG nebo JPG.</p>
+            <p className="text-sm text-gray-400 mb-3">{t("settings.avatarHint")}</p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -181,7 +184,7 @@ export default function Settings() {
               className="btn-secondary font-heading"
             >
               {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-              {uploadingAvatar ? "Nahrávání..." : "Vybrat obrázek"}
+              {uploadingAvatar ? t("settings.uploading") : t("settings.selectImage")}
             </button>
           </div>
         </div>

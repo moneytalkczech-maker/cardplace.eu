@@ -25,7 +25,7 @@ export default function CardDetailPage() {
     api.get(`/database-cards/${cardId}`).then((r) => setCard(r.data)).catch(() => {}).finally(() => setLoading(false));
   }, [cardId]);
 
-  if (loading) return <div className="mx-auto max-w-4xl px-4 py-8"><div className="animate-pulse h-96 bg-[#111B2E] rounded-xl" /></div>;
+  if (loading) return <div className="mx-auto max-w-4xl px-4 py-8"><div className="animate-pulse h-96 bg-[#0B1220] rounded-xl" /></div>;
   if (!card) return <div className="mx-auto max-w-4xl px-4 py-8"><p className="text-gray-500">Karta nenalezena</p></div>;
 
   const hasPrices = card.priceCardmarketAvg || card.priceEbayAvg;
@@ -40,7 +40,7 @@ export default function CardDetailPage() {
         {/* Card Image */}
         <div className="aspect-[3/4] rounded-xl bg-gradient-to-br from-[rgba(0,200,255,0.08)] to-[rgba(0,200,255,0.02)] border border-[rgba(0,200,255,0.1)] flex items-center justify-center">
           {card.imageUrl ? (
-            <img src={card.imageUrl} alt={card.name} className="w-full h-full object-contain" />
+            <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
           ) : (
             <span className="text-8xl opacity-10">{card.set.category === "pokemon" ? "🃏" : "⚽"}</span>
           )}

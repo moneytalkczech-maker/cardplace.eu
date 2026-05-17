@@ -89,7 +89,7 @@ async function fetchPokemon(query: string): Promise<CardLookupResult[]> {
       category: "pokemon" as CardCategory,
       rarity: c.rarity || "",
       cardNumber: `${c.set?.id || ""}-${c.number || ""}`,
-      imageUrl: c.images?.small || c.images?.large || "",
+      imageUrl: "", // 🔒 Obrázky z API neukládáme – používají se placeholders
       source: "pokemontcg" as const,
     }));
   } catch {
@@ -113,7 +113,7 @@ async function fetchMagic(query: string): Promise<CardLookupResult[]> {
       category: "magic" as CardCategory,
       rarity: c.rarity || "",
       cardNumber: `${c.set}-${c.collector_number}`,
-      imageUrl: c.image_uris?.small || c.image_uris?.normal || "",
+      imageUrl: "", // 🔒 Placeholder
       source: "scryfall" as const,
     }));
   } catch {
@@ -137,7 +137,7 @@ async function fetchYugioh(query: string): Promise<CardLookupResult[]> {
       category: "yugioh" as CardCategory,
       rarity: c.attribute || "",
       cardNumber: String(c.id),
-      imageUrl: c.card_images?.[0]?.image_url_small || "",
+      imageUrl: "", // 🔒 Placeholder
       source: "ygoprodeck" as const,
     }));
   } catch {

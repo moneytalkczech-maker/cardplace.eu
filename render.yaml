@@ -1,0 +1,87 @@
+# Render Blueprint — Infrastructure as Code
+# https://render.com/docs/blueprint-spec
+#
+# Tento soubor definuje celou infrastrukturu:
+# - API server (Node.js + Express)
+# - Frontend (React + Vite, static site)
+# - PostgreSQL databáze
+#
+# Po prvním deployi:
+# 1. V Render Dashboard nastav ručně chybějící env proměnné:
+#    - STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+#    - RESEND_API_KEY, EMAIL_FROM
+#    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+#    - POKEMON_TCG_API_KEY, EBAY_APP_ID
+#    - SENTRY_DSN (volitelné)
+# 2. Až budeš mít custom doménu (cardplace.eu), aktualizuj:
+#    - CORS_ORIGIN → https://cardplace.eu
+#    - VITE_API_URL → https://api.cardplace.eu (nebo https://cardplace-api.onrender.com/api)
+
+services:
+  # ─── Backend API (Node.js / Express) ───────────────────────
+  - type: web
+    name: cardplace-api
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd server && npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: cd server && npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://cardplace.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cardplace-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: LOG_LEVEL
+        value: info
+      - key: EUR_TO_CZK
+        value: "25.3"
+      - key: USD_TO_CZK
+        value: "23.2"
+      - key: GBP_TO_CZK
+        value: "29.5"
+
+  # ─── Frontend (React / Vite) ──────────────────────────────
+  - type: static
+    name: cardplace-client
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/dist
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://cardplace-api.onrender.com/api
+
+databases:
+  # ─── PostgreSQL (Render Managed) ──────────────────────────
+  - name: cardplace-db
+    databaseName: cardplace
+    plan: free
+    region: frankfurt

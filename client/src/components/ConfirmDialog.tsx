@@ -14,12 +14,36 @@ interface Props {
 
 export default function ConfirmDialog({ open, title, message, confirmLabel = "Potvrdit", cancelLabel = "Zrušit", danger, onConfirm, onCancel }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    // Focus na potvrzovací tlačítko při otevření
+    setTimeout(() => confirmRef.current?.focus(), 50);
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    // Focus trap
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !ref.current) return;
+      const focusable = ref.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener("keydown", trap);
+    return () => {
+      document.removeEventListener("keydown", handler);
+      document.removeEventListener("keydown", trap);
+    };
   }, [open, onCancel]);
 
   if (!open) return null;
@@ -38,8 +62,8 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = "Po
         </div>
         <p className="text-sm text-gray-400 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
-          <button onClick={onCancel} className="btn-ghost text-sm font-heading">{cancelLabel}</button>
-          <button onClick={onConfirm} className={`btn text-sm font-heading ${danger ? "btn-danger" : "btn-primary"}`}>{confirmLabel}</button>
+          <button ref={cancelRef} onClick={onCancel} className="btn-ghost text-sm font-heading">{cancelLabel}</button>
+          <button ref={confirmRef} onClick={onConfirm} className={`btn text-sm font-heading ${danger ? "btn-danger" : "btn-primary"}`}>{confirmLabel}</button>
         </div>
       </div>
     </div>

@@ -1,225 +1,38 @@
-<svg width="1400" height="900" viewBox="0 0 1400 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <style>
-      .brand-text {
-        font-family: Arial Black, Impact, sans-serif;
-        font-weight: 900;
-        font-style: italic;
-      }
-
-      .tagline {
-        font-family: Arial, sans-serif;
-        font-weight: 700;
-        letter-spacing: 17px;
-      }
-    </style>
-
-    <radialGradient id="bg" cx="50%" cy="45%" r="75%">
-      <stop offset="0%" stop-color="#071526"/>
-      <stop offset="55%" stop-color="#030A13"/>
-      <stop offset="100%" stop-color="#010409"/>
-    </radialGradient>
-
-    <linearGradient id="green" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D7FF00"/>
-      <stop offset="45%" stop-color="#91FF00"/>
-      <stop offset="100%" stop-color="#35FF5E"/>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00C8FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#009DFF;stop-opacity:1" />
     </linearGradient>
-
-    <linearGradient id="blue" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D9FF"/>
-      <stop offset="50%" stop-color="#007BFF"/>
-      <stop offset="100%" stop-color="#003DFF"/>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A7FF00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7CFF00;stop-opacity:1" />
     </linearGradient>
-
-    <linearGradient id="whiteText" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#C8D0DC"/>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF3366;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF0044;stop-opacity:1" />
     </linearGradient>
-
-    <filter id="greenGlow" x="-70%" y="-70%" width="240%" height="240%">
-      <feGaussianBlur stdDeviation="9" result="blur"/>
-      <feColorMatrix in="blur" type="matrix"
-        values="0 0 0 0 0.55
-                0 0 0 0 1
-                0 0 0 0 0
-                0 0 0 0.9 0"/>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
       <feMerge>
-        <feMergeNode/>
+        <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
-    </filter>
-
-    <filter id="blueGlow" x="-70%" y="-70%" width="240%" height="240%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feColorMatrix in="blur" type="matrix"
-        values="0 0 0 0 0
-                0 0 0 0 0.55
-                0 0 0 0 1
-                0 0 0 0.85 0"/>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.85"/>
-    </filter>
-
-    <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#91FF00" flood-opacity="0.75"/>
     </filter>
   </defs>
-
-  <!-- Background -->
-  <rect width="1400" height="900" fill="url(#bg)"/>
-
-  <!-- Neon motion rings -->
-  <path d="M260 455C405 350 600 325 790 360C975 395 1090 475 1150 545"
-        stroke="url(#green)"
-        stroke-width="22"
-        stroke-linecap="round"
-        opacity="0.9"
-        filter="url(#greenGlow)"/>
-
-  <path d="M485 585C640 630 895 615 1120 515"
-        stroke="url(#blue)"
-        stroke-width="16"
-        stroke-linecap="round"
-        opacity="0.95"
-        filter="url(#blueGlow)"/>
-
-  <!-- Back card -->
-  <g transform="translate(725 205) rotate(8)" filter="url(#shadow)">
-    <rect x="0" y="0" width="255" height="355" rx="28"
-          fill="#040C16"
-          stroke="url(#blue)"
-          stroke-width="8"
-          filter="url(#blueGlow)"/>
-
-    <rect x="28" y="32" width="200" height="290" rx="18"
-          fill="#020811"
-          stroke="#053A78"
-          stroke-width="4"/>
-
-    <path d="M128 92L151 164L226 164L166 207L188 280L128 235L68 280L90 207L30 164L105 164Z"
-          fill="#007BFF"
-          opacity="0.85"/>
-  </g>
-
-  <!-- Front card -->
-  <g transform="translate(420 150) rotate(-6)" filter="url(#shadow)">
-    <rect x="0" y="0" width="305" height="395" rx="31"
-          fill="#040B14"
-          stroke="url(#green)"
-          stroke-width="10"
-          filter="url(#greenGlow)"/>
-
-    <rect x="34" y="35" width="237" height="325" rx="22"
-          fill="#020811"
-          stroke="#083463"
-          stroke-width="5"/>
-
-    <path d="M70 84H240L220 128H95Z"
-          fill="#0068D8"/>
-
-    <text x="152" y="235"
-          text-anchor="middle"
-          class="brand-text"
-          font-size="92"
-          fill="url(#green)"
-          filter="url(#textGlow)">
-      CB
-    </text>
-
-    <text x="152" y="235"
-          text-anchor="middle"
-          class="brand-text"
-          font-size="92"
-          fill="none"
-          stroke="#FFFFFF"
-          stroke-width="2"
-          opacity="0.45">
-      CB
-    </text>
-  </g>
-
-  <!-- Gavel -->
-  <g transform="translate(735 355) rotate(-22)" filter="url(#shadow)">
-    <!-- Handle -->
-    <rect x="150" y="74" width="330" height="42" rx="21"
-          fill="#050B13"
-          stroke="url(#blue)"
-          stroke-width="5"/>
-
-    <rect x="160" y="82" width="300" height="16" rx="8"
-          fill="url(#green)"
-          opacity="0.9"
-          filter="url(#greenGlow)"/>
-
-    <!-- Head -->
-    <rect x="35" y="28" width="155" height="118" rx="25"
-          fill="#060B16"
-          stroke="url(#blue)"
-          stroke-width="5"/>
-
-    <rect x="20" y="18" width="185" height="32" rx="16"
-          fill="url(#green)"
-          filter="url(#greenGlow)"/>
-
-    <rect x="20" y="126" width="185" height="32" rx="16"
-          fill="url(#green)"
-          filter="url(#greenGlow)"/>
-
-    <path d="M60 43C92 34 132 35 165 45"
-          stroke="#FFFFFF"
-          stroke-width="5"
-          stroke-linecap="round"
-          opacity="0.28"/>
-  </g>
-
-  <!-- Auction base -->
-  <g filter="url(#shadow)">
-    <ellipse cx="730" cy="602" rx="138" ry="23" fill="#02060C"/>
-    <rect x="605" y="570" width="250" height="42" rx="21"
-          fill="#040A12"
-          stroke="url(#green)"
-          stroke-width="6"
-          filter="url(#greenGlow)"/>
-    <ellipse cx="730" cy="570" rx="125" ry="24"
-             fill="#071222"
-             stroke="url(#blue)"
-             stroke-width="5"
-             filter="url(#blueGlow)"/>
-  </g>
-
-  <!-- Brand name -->
-  <g filter="url(#shadow)">
-    <text x="175" y="760"
-          class="brand-text"
-          font-size="140"
-          fill="url(#whiteText)"
-          letter-spacing="-7">
-      Card
-    </text>
-
-    <text x="790" y="760"
-          class="brand-text"
-          font-size="140"
-          fill="url(#green)"
-          letter-spacing="-7"
-          filter="url(#textGlow)">
-      Bid
-    </text>
-  </g>
-
-  <!-- Tagline -->
-  <text x="700" y="835"
-        text-anchor="middle"
-        class="tagline"
-        font-size="34"
-        fill="#F4F7FB">
-    DRAŽ. PRODÁVEJ. SBÍREJ.
-  </text>
+  
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="58" fill="#050A12" stroke="url(#blueGrad)" stroke-width="2"/>
+  
+  <!-- C letter (blue) -->
+  <path d="M45 30 C30 30, 20 40, 20 55 C20 70, 30 80, 45 80 L45 70 C35 70, 30 65, 30 55 C30 45, 35 40, 45 40 Z" 
+        fill="none" stroke="url(#blueGrad)" stroke-width="4" filter="url(#glow)"/>
+  
+  <!-- Lightning bolt (red) -->
+  <path d="M55 25 L40 55 L50 55 L45 85 L70 50 L58 50 Z" 
+        fill="url(#redGrad)" filter="url(#glow)"/>
+  
+  <!-- P letter (green) -->
+  <path d="M65 30 L85 30 C95 30, 100 35, 100 45 C100 55, 95 60, 85 60 L75 60 L75 80 L65 80 Z M75 40 L75 50 L85 50 C90 50, 90 40, 85 40 Z" 
+        fill="none" stroke="url(#greenGrad)" stroke-width="4" filter="url(#glow)"/>
 </svg>

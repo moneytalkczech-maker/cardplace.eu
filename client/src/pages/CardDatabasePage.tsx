@@ -55,9 +55,9 @@ export default function CardDatabasePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1,2,3,4,5,6].map((i) => (
             <div key={i} className="rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-5 animate-pulse">
-              <div className="h-8 bg-[#111B2E] rounded w-3/4 mb-3" />
-              <div className="h-4 bg-[#111B2E] rounded w-1/2 mb-2" />
-              <div className="h-4 bg-[#111B2E] rounded w-1/3" />
+              <div className="h-8 bg-[#0B1220] rounded w-3/4 mb-3" />
+              <div className="h-4 bg-[#0B1220] rounded w-1/2 mb-2" />
+              <div className="h-4 bg-[#0B1220] rounded w-1/3" />
             </div>
           ))}
         </div>
@@ -79,7 +79,7 @@ export default function CardDatabasePage() {
                       <p className="text-xs text-gray-500 mt-1">{set.brand || ""} {set.year ? `• ${set.year}` : ""}</p>
                     </div>
                     <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      set.category === "pokemon" ? "bg-red-900/30 text-red-400" : "bg-blue-900/30 text-blue-400"
+                      set.category === "pokemon" ? "bg-red-900/30 text-red-400" : "bg-[rgba(0,200,255,0.12)] text-[#00C8FF]"
                     }`}>
                       {CATEGORY_NAMES[set.category] || set.category}
                     </span>

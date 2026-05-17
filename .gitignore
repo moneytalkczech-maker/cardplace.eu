@@ -13,3 +13,24 @@ coverage/
 uploads/
 *.log
 .DS_Store
+
+# Build artifacts
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Audit reports (not needed in production repo)
+ADMIN_PROJECT_AUDIT.md
+ARCHITECTURE_ANALYSIS.md
+AUDIT_REPORT.md
+BACKEND_AUDIT.md
+CARD_DATABASE_LEGAL_AUDIT.md
+FINAL_AUDIT_REPORT.md
+LEGAL_AUDIT.md
+QA_REPORT.md
+SECURITY_AUDIT.md
+UI_REDESIGN_SUMMARY.md
+AUDIT/
+
+# OS files
+Thumbs.db
+desktop.ini

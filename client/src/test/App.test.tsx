@@ -11,7 +11,7 @@ describe("App component", () => {
       </MemoryRouter>
     );
     // Should show loading state initially (lazy routes)
-    expect(screen.getByText(/CardBid|card/i)).toBeInTheDocument();
+    expect(screen.getByText("CardPlace")).toBeInTheDocument();
   });
 
   it("shows login page at /login", async () => {

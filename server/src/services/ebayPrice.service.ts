@@ -44,7 +44,7 @@ export async function updateEbayPrices(cardId: string): Promise<EbayPriceResult 
 
     if (prices.length === 0) return null;
 
-    const pricesCzk = prices.map((p: number) => toCzk(p, "USD"));
+    const pricesCzk = await Promise.all(prices.map((p: number) => toCzk(p, "USD")));
     const avg = Math.round((pricesCzk.reduce((a: number, b: number) => a + b, 0) / pricesCzk.length) * 100) / 100;
     const sorted = [...pricesCzk].sort((a: number, b: number) => a - b);
     const median = sorted.length % 2 === 0

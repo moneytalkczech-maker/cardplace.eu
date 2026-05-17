@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Scan, X, AlertCircle, Loader2, Sparkles, Check, ArrowRight, Search, Brain } from "lucide-react";
-import CardDetectionService from "../services/CardDetectionService";
-import OcrService from "../services/OcrService";
 import { useTranslation } from "../hooks/useTranslation";
 import { searchCards } from "../lib/CardsDB";
 import type { MarketCard } from "../lib/CardsDB";
 
-const detector = CardDetectionService.getInstance();
-const ocr = OcrService.getInstance();
+// TF.js a Tesseract.js se načítají dynamicky pouze při použití scanu
+// Původní statické importy odstraněny pro snížení bundle size o ~14MB
 
 export default function ScanCard() {
   const { t } = useTranslation();
@@ -49,6 +47,12 @@ export default function ScanCard() {
     setAutoMatched(false);
 
     try {
+      // Dynamický import — TF.js a Tesseract.js se načtou pouze při použití
+      const CardDetectionService = (await import("../services/CardDetectionService")).default;
+      const OcrService = (await import("../services/OcrService")).default;
+      const detector = CardDetectionService.getInstance();
+      const ocr = OcrService.getInstance();
+
       const img = new Image();
       img.src = image;
       await new Promise<void>((resolve) => { img.onload = () => resolve(); });
@@ -58,7 +62,7 @@ export default function ScanCard() {
       setResult(det);
 
       if (!det.detected) {
-        setError("Na fotografii nebyla rozpoznána žádná karta. Zkus kvalitnější snímek.");
+        setError(t("scan.noCardDetected"));
         setScanning(false);
         return;
       }
@@ -85,7 +89,7 @@ export default function ScanCard() {
         }
       }
     } catch (err) {
-      setError("Nepodařilo se načíst AI model. Zkus to znovu.");
+      setError(t("scan.modelError"));
     }
     setScanning(false);
   };
@@ -112,7 +116,7 @@ export default function ScanCard() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-blue-800 bg-blue-900/30 px-4 py-1.5 text-sm text-blue-400 mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(0,200,255,0.2)] bg-[rgba(0,200,255,0.12)] px-4 py-1.5 text-sm text-[#00C8FF] mb-4">
           <Sparkles className="h-4 w-4" /> {t("scan.badge")}
         </div>
         <h1 className="text-3xl font-bold">{t("scan.title")}</h1>
@@ -122,10 +126,10 @@ export default function ScanCard() {
       <div className="card mb-6">
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-700 hover:border-blue-500 cursor-pointer transition-colors flex items-center justify-center bg-gray-800/50"
+          className="aspect-[4/3] rounded-lg border-2 border-dashed border-[rgba(0,200,255,0.15)] hover:border-[#00C8FF] cursor-pointer transition-colors flex items-center justify-center bg-[rgba(0,200,255,0.05)]"
         >
           {image ? (
-            <img src={image} alt="Uploaded card" className="w-full h-full object-contain rounded-lg" />
+            <img src={image} alt="Uploaded card" loading="lazy" className="w-full h-full object-contain rounded-lg" />
           ) : (
             <div className="text-center text-gray-500">
               <Camera className="h-12 w-12 mx-auto mb-2" />
@@ -173,7 +177,7 @@ export default function ScanCard() {
               <Check className="h-6 w-6 text-[#A7FF00]" />
             </div>
             <div>
-              <p className="font-heading font-bold text-lg">Karta detekována! ✅</p>
+              <p className="font-heading font-bold text-lg">{t("scan.detected")}</p>
               <p className="text-sm text-gray-400">
                 Detekce: {result.confidence}% 
                 {ocrText && <> · OCR: {ocrConfidence}%</>}
@@ -186,10 +190,10 @@ export default function ScanCard() {
             <div className="flex items-center gap-2 p-3 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] mb-3">
               <Brain className="h-4 w-4 text-[#00C8FF] flex-shrink-0" />
               <span className="text-sm text-gray-300">
-                Rozpoznáno: <strong className="text-white">{ocrText}</strong>
+                {t("scan.ocrLabel")} <strong className="text-white">{ocrText}</strong>
               </span>
               {autoMatched && (
-                <span className="text-xs text-[#A7FF00] ml-auto">Auto-match ✅</span>
+                <span className="text-xs text-[#A7FF00] ml-auto">{t("scan.autoMatch")}</span>
               )}
             </div>
           )}
@@ -197,13 +201,13 @@ export default function ScanCard() {
           {/* Ruční vyhledávání (fallback nebo dolaďění) */}
           {!autoMatched && (
             <>
-              <p className="text-sm text-gray-500 mb-3">Vyber kartu ze seznamu:</p>
+              <p className="text-sm text-gray-500 mb-3">{t("scan.selectCard")}</p>
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <input
                   type="text"
                   className="input pl-10"
-                  placeholder="Napiš název karty..."
+                  placeholder={t("scan.cardPlaceholder")}
                   value={cardSearch}
                   onChange={(e) => setCardSearch(e.target.value)}
                 />
@@ -229,7 +233,7 @@ export default function ScanCard() {
                 <p className="text-xs text-gray-400">{selectedCard.setName}</p>
               </div>
               <button onClick={createAuction} className="btn-primary text-sm font-heading">
-                Vytvořit aukci <ArrowRight className="h-4 w-4" />
+                {t("scan.createAuction")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}

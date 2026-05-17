@@ -1,6 +1,23 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cardplace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cardplace_secret}
+      POSTGRES_DB: cardplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardplace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   server:
     build:
       context: ./server
@@ -9,7 +26,7 @@ services:
       - "4000:4000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:./data/prod.db
+      - DATABASE_URL=postgresql://cardplace:${POSTGRES_PASSWORD:-cardplace_secret}@postgres:5432/cardplace
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:?REFRESH_TOKEN_SECRET is required}
       - PORT=4000
@@ -21,6 +38,9 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY:-}
       - REDIS_URL=${REDIS_URL:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - server-data:/app/data
     healthcheck:
@@ -43,4 +63,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-data:
   server-data:

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Check, DollarSign, Gavel, Heart, Info, Target } from "lucide-react";
-import api from "../services/api";
+import { useAuthStore } from "../store/authStore";
 
 interface Notification {
   id: string;
@@ -36,26 +36,14 @@ function relativeTime(dateStr: string): string {
 }
 
 export default function NotificationBell() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { notifications, unreadCount, markNotificationsRead, fetchNotifications } = useAuthStore();
 
-  const fetchNotifications = async () => {
-    try {
-      const data: Notification[] = await api.get("/users/notifications").then((r) => r.data);
-      setNotifications(data);
-      setUnreadCount(data.filter((n) => !n.read).length);
-    } catch {
-      // silently fail
-    }
-  };
-
+  // Načtení notifikací při prvním mountu (pravidelný polling zajišťuje Navbar)
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -68,24 +56,12 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const markAllRead = async () => {
-    try {
-      await api.post("/users/notifications/read");
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch {
-      // silently fail
-    }
-  };
-
   const handleNotificationClick = async (n: Notification) => {
     if (!n.read) {
       try {
-        await api.patch(`/users/notifications/${n.id}/read`);
-        setNotifications((prev) =>
-          prev.map((x) => (x.id === n.id ? { ...x, read: true } : x))
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        const { users } = await import("../services/api");
+        await users.markNotificationRead(n.id);
+        fetchNotifications();
       } catch {
         // silently fail
       }
@@ -114,7 +90,7 @@ export default function NotificationBell() {
             <span className="text-sm font-semibold font-heading text-white">Oznámení</span>
             {unreadCount > 0 && (
               <button
-                onClick={markAllRead}
+                onClick={markNotificationsRead}
                 className="text-xs text-[#009DFF] hover:text-[#33B1FF] transition-colors font-medium"
               >
                 Označit vše jako přečtené
@@ -128,7 +104,7 @@ export default function NotificationBell() {
                 Žádná oznámení
               </div>
             ) : (
-              notifications.slice(0, 30).map((n) => {
+              notifications.slice(0, 30).map((n: any) => {
                 const { icon: NotifIcon, color: iconColor } = iconMap[n.type] || defaultIcon;
                 return (
                   <button

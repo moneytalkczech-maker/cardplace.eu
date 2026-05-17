@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 import { getTheme } from "./lib/theme";
+import { CountdownProvider } from "./hooks/useCountdown";
 
 document.documentElement.setAttribute("data-theme", getTheme());
 
@@ -14,7 +15,9 @@ window.addEventListener("theme-change", ((e: CustomEvent) => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <CountdownProvider>
+        <App />
+      </CountdownProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -13,6 +13,7 @@ export interface User {
   totalSales?: number;
   auctionCount?: number;
   bidCount?: number;
+  wonCount?: number;
   createdAt?: string;
   rank?: string;
   rankLabel?: string;
@@ -45,6 +46,7 @@ export interface Auction {
   id: string;
   title: string;
   description?: string;
+  condition?: string;
   imageUrl?: string;
   startingPrice: number;
   currentPrice: number;
@@ -52,6 +54,8 @@ export interface Auction {
   endTime: string;
   status: string;
   featured: boolean;
+  buyNowPrice?: number;
+  buyNowUsed?: boolean;
   createdAt: string;
   userId: string;
   cardId?: string;
@@ -68,6 +72,7 @@ export interface Auction {
 export interface Bid {
   id: string;
   amount: number;
+  maxBid?: number;
   createdAt: string;
   userId: string;
   auctionId: string;

@@ -1,5 +1,5 @@
-const CACHE = "cardbid-v2";
-const STATIC_CACHE = "cardbid-static-v2";
+const CACHE = "cardplace-v2";
+const STATIC_CACHE = "cardplace-static-v2";
 
 const PRECACHE_URLS = [
   "/",

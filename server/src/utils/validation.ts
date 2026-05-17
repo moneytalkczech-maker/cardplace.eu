@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { z, ZodSchema } from "zod";
+import logger from "../utils/logger";
+
+const isProd = process.env.NODE_ENV === "production";
 
 export function validateBody(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -8,6 +11,11 @@ export function validateBody(schema: ZodSchema) {
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {
+        // V produkci skrýt detaily validačních chyb (prevence information disclosure)
+        if (isProd) {
+          logger.warn({ errors: err.errors, path: req.path }, "Validation failed");
+          return res.status(400).json({ error: "Invalid request" });
+        }
         return res.status(400).json({ error: "Validation failed", details: err.errors });
       }
       return res.status(400).json({ error: "Invalid request body" });
@@ -22,6 +30,10 @@ export function validateQuery(schema: ZodSchema) {
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {
+        if (isProd) {
+          logger.warn({ errors: err.errors, path: req.path }, "Query validation failed");
+          return res.status(400).json({ error: "Invalid request" });
+        }
         return res.status(400).json({ error: "Validation failed", details: err.errors });
       }
       return res.status(400).json({ error: "Invalid query parameters" });
@@ -40,6 +52,9 @@ export const registerSchema = z.object({
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one digit"),
   referralCode: z.string().optional(),
+  acceptedTerms: z.boolean().refine((v) => v === true, { message: "Je nutné souhlasit s obchodními podmínkami" }),
+  acceptedPrivacy: z.boolean().refine((v) => v === true, { message: "Je nutné souhlasit se zpracováním osobních údajů" }),
+  confirmedAge: z.boolean().refine((v) => v === true, { message: "Musíte být starší 18 let" }),
 });
 
 export const loginSchema = z.object({
@@ -50,15 +65,25 @@ export const loginSchema = z.object({
 // Auction schemas
 export const createAuctionSchema = z.object({
   title: z.string().min(1, "Title required").max(200, "Title too long"),
-  description: z.string().optional(),
+  description: z.string().max(5000, "Description too long").optional(),
   imageUrl: z.string().url("Invalid image URL").optional(),
   startingPrice: z.coerce.number().positive("Starting price must be positive"),
-  endTime: z.string().refine((v) => !isNaN(Date.parse(v)), { message: "Invalid date format" }),
-  cardId: z.string().min(1, "Card ID required"),
-});
+  buyNowPrice: z.coerce.number().positive("Buy now price must be positive").optional(),
+  endTime: z.string().refine((v) => !isNaN(Date.parse(v)), { message: "Invalid date format" })
+    .refine((v) => new Date(v) > new Date(), { message: "End time must be in the future" }),
+  cardId: z.string().optional(),
+  confirmedOriginal: z.boolean().refine((v) => v === true, { message: "Je nutné potvrdit originalitu položky" }),
+}).refine((data) => {
+  // Buy now cena musí být vyšší než vyvolávací cena
+  if (data.buyNowPrice && data.buyNowPrice <= data.startingPrice) {
+    return false;
+  }
+  return true;
+}, { message: "Buy now cena musí být vyšší než vyvolávací cena" });
 
 export const bidSchema = z.object({
   amount: z.coerce.number().positive("Bid amount must be positive"),
+  maxBid: z.coerce.number().positive("Max bid must be positive").optional(),
 });
 
 // Collection schemas
@@ -88,13 +113,13 @@ export const createWantedSchema = z.object({
 
 // Transaction schema
 export const completeTransactionSchema = z.object({
-  auctionId: z.string().min(1, "Auction ID required"),
+  auctionId: z.string().min(1, "Auction ID required").max(100, "Auction ID too long"),
 });
 
 // Query schemas
 export const auctionQuerySchema = z.object({
-  status: z.string().optional(),
-  search: z.string().optional(),
+  status: z.string().max(50).optional(),
+  search: z.string().max(200, "Search query too long").optional(),
   category: z.enum(["pokemon", "magic", "yugioh", "sports", "other"]).optional(),
   sort: z.enum(["ending", "price-asc", "price-desc", "trending"]).optional(),
 });

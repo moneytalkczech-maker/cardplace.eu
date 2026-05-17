@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/opt/cardbid"
-REPO_URL="https://github.com/your-org/cardbid.git"
+APP_DIR="/opt/cardplace"
+REPO_URL="https://github.com/your-org/cardplace.git"
 BRANCH="main"
 NODE_VERSION="22"
 
-echo "=== CardBid Deploy ==="
+echo "=== CardPlace.eu Deploy ==="
 
 # Ensure running as non-root with sudo
 if [ "$EUID" -eq 0 ]; then
@@ -20,6 +20,10 @@ echo "[1/7] Pulling latest code..."
 git fetch origin
 git checkout "$BRANCH"
 git pull origin "$BRANCH"
+
+# Re-apply template variables in nginx config
+DOMAIN="cardplace.eu"
+sudo sed -i "s/<%= domain %>/$DOMAIN/g" /etc/nginx/sites-available/cardplace
 
 echo "[2/7] Installing dependencies..."
 cd server && npm ci --omit=dev && cd ..
@@ -36,7 +40,7 @@ cd server && npx prisma migrate deploy && cd ..
 
 echo "[6/7] Restarting services..."
 sudo systemctl daemon-reload
-sudo systemctl restart cardbid-server
+sudo systemctl restart cardplace-server
 sudo systemctl reload nginx
 
 echo "[7/7] Health check..."
@@ -46,7 +50,7 @@ if curl -sf http://localhost:4000/api/health > /dev/null 2>&1; then
 else
   echo "✗ Server health check failed — rolling back..."
   git revert HEAD --no-edit
-  sudo systemctl restart cardbid-server
+  sudo systemctl restart cardplace-server
   exit 1
 fi
 

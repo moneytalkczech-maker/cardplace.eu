@@ -6,7 +6,10 @@ export interface FraudCheckResult {
   score: number; // 0–100, vyšší = podezřelejší
 }
 
-/** Jednoduchá detekce podezřelých aktivit */
+/** Práh pro označení aukce za podezřelou */
+const SUSPICIOUS_THRESHOLD = 30;
+
+/** Detekce podezřelých aktivit při vytváření aukce */
 export async function checkAuctionFraud(userId: string, startingPrice: number): Promise<FraudCheckResult> {
   const reasons: string[] = [];
   let score = 0;
@@ -18,6 +21,8 @@ export async function checkAuctionFraud(userId: string, startingPrice: number): 
       trustScore: true,
       totalSales: true,
       verified: true,
+      emailVerifiedAt: true,
+      createdIp: true,
       _count: { select: { auctions: true } },
     },
   });
@@ -49,40 +54,93 @@ export async function checkAuctionFraud(userId: string, startingPrice: number): 
     score += 15;
   }
 
-  // 5. Příliš mnoho aktivních aukcí (potenciální spam)
+  // 5. Neověřený email + jakákoli aukce
+  if (!user.emailVerifiedAt && startingPrice > 0) {
+    reasons.push("Email není ověřený");
+    score += 10;
+  }
+
+  // 6. Příliš mnoho aktivních aukcí (potenciální spam)
   if (user._count.auctions > 20) {
     reasons.push("Moc aktivních aukcí");
     score += 10;
   }
 
+  // 7. Velmi nový účet (méně než 1 den) s jakoukoli aukcí
+  if (daysOld < 1) {
+    reasons.push("Účet vytvořen před méně než 24 hodinami");
+    score += 20;
+  }
+
   return {
-    suspicious: score >= 30,
+    suspicious: score >= SUSPICIOUS_THRESHOLD,
     reasons,
     score: Math.min(score, 100),
   };
 }
 
 /** Detekce podezřelého bidding chování */
-export async function checkBidFraud(userId: string, auctionId: string): Promise<FraudCheckResult> {
+export async function checkBidFraud(userId: string, auctionId: string, bidAmount: number): Promise<FraudCheckResult> {
   const reasons: string[] = [];
   let score = 0;
 
-  // Rychlé příhozy vlastní aukce (zkontrolováno už v controlleru)
-  // Sledování více aukcí od stejného nového uživatele
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { createdAt: true, trustScore: true },
+  });
+
+  if (!user) return { suspicious: false, reasons: [], score: 0 };
+
+  // 1. Rychlé příhozy (více než 10 bidů za hodinu)
   const recentBids = await prisma.bid.count({
     where: {
       userId,
       createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
     },
   });
-
   if (recentBids > 10) {
     reasons.push("Příliš mnoho příhozů za krátkou dobu");
     score += 20;
   }
 
+  // 2. Nový účet bidující vysoké částky
+  const daysOld = (Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (daysOld < 3 && bidAmount > 5000) {
+    reasons.push("Nový účet s vysokým příhozem");
+    score += 25;
+  }
+
+  // 3. Nízký trust score + vysoký bid
+  if (user.trustScore < 10 && bidAmount > 3000) {
+    reasons.push("Nízké skóre důvěry u vysokého příhozu");
+    score += 15;
+  }
+
+  // 4. Kontrola, zda uživatel nebiduje vlastní aukci (shilling detection)
+  const auctionOwner = await prisma.auction.findUnique({
+    where: { id: auctionId },
+    select: { userId: true },
+  });
+  if (auctionOwner && auctionOwner.userId === userId) {
+    reasons.push("Příhoz na vlastní aukci");
+    score += 50;
+  }
+
+  // 5. Počet aktivních aukcí, kde uživatel biduje (pattern detection)
+  const distinctAuctionBids = await prisma.bid.groupBy({
+    by: ["auctionId"],
+    where: {
+      userId,
+      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    },
+  });
+  if (distinctAuctionBids.length > 20) {
+    reasons.push("Příliš mnoho různých aukcí v krátkém čase");
+    score += 10;
+  }
+
   return {
-    suspicious: score >= 20,
+    suspicious: score >= SUSPICIOUS_THRESHOLD,
     reasons,
     score: Math.min(score, 100),
   };

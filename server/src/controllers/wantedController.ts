@@ -25,14 +25,14 @@ export async function create(req: AuthRequest, res: Response) {
     where: { cardId, status: "ACTIVE", userId: { not: req.userId } },
     select: { userId: true, title: true },
   });
-  for (const match of matches) {
-    await prisma.notification.create({
-      data: {
+  if (matches.length > 0) {
+    await prisma.notification.createMany({
+      data: matches.map((match) => ({
         message: `Někdo hledá "${cardName}" — máš ji v aukci "${match.title}"`,
         type: "WANTED",
         link: "/wanted",
         userId: match.userId,
-      },
+      })),
     });
   }
 

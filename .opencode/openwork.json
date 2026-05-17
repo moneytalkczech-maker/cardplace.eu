@@ -1,12 +1,12 @@
 {
   "version": 1,
   "workspace": {
-    "name": "CardBid",
-    "createdAt": 1778755415196,
+    "name": "CardBid_copy_default",
+    "createdAt": 1779052076916,
     "preset": "starter"
   },
   "authorizedRoots": [
-    "C:\\Users\\josef\\Documents\\Open_Work\\CardBid"
+    "C:\\Users\\josef\\Documents\\Open_Work\\CardBid_copy_default"
   ],
   "reload": null
 }

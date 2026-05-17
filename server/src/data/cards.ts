@@ -36,7 +36,7 @@ function buildCards(data: CardEntry[], setCode: string): CardData[] {
     setName: EXPANSION_NAMES[setCode] || setCode,
     rarity: c.rarity,
     cardNumber: `${setCode}-${c.id}`,
-    imageUrl: c.image || "",
+    imageUrl: "", // 🔒 Obrázky nejsou dostupné – používají se placeholders
   }));
 }
 

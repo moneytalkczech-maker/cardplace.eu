@@ -26,15 +26,25 @@ export async function getProfile(req: AuthRequest, res: Response) {
 }
 
 export async function getMyAuctions(req: AuthRequest, res: Response) {
-  const auctions = await prisma.auction.findMany({
-    where: { userId: req.userId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: { select: { id: true, username: true, trustScore: true, verified: true, totalSales: true } },
-      _count: { select: { bids: true } },
-      card: { select: { name: true, setName: true, imageUrl: true } },
-    },
-  }) as any;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+  const skip = (page - 1) * limit;
+
+  const [auctions, total] = await Promise.all([
+    prisma.auction.findMany({
+      where: { userId: req.userId },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        user: { select: { id: true, username: true, trustScore: true, verified: true, totalSales: true } },
+        _count: { select: { bids: true } },
+        card: { select: { name: true, setName: true, imageUrl: true } },
+      },
+    }),
+    prisma.auction.count({ where: { userId: req.userId } }),
+  ]);
+
   const withRank = auctions.map((a: any) => {
     if (a.user) {
       const rank = calculateRank(a.user.trustScore, a.user.totalSales || 0);
@@ -42,13 +52,21 @@ export async function getMyAuctions(req: AuthRequest, res: Response) {
     }
     return a;
   });
-  res.json(withRank);
+
+  res.json({
+    data: withRank,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
 }
 
 export async function getMyBids(req: AuthRequest, res: Response) {
+  const take = Math.min(parseInt(req.query.take as string) || 50, 100);
   const bids = await prisma.bid.findMany({
     where: { userId: req.userId },
     orderBy: { createdAt: "desc" },
+    take,
     include: {
       auction: {
         select: {
@@ -62,20 +80,35 @@ export async function getMyBids(req: AuthRequest, res: Response) {
 }
 
 export async function getWatchlist(req: AuthRequest, res: Response) {
-  const watchlist = await prisma.watchlist.findMany({
-    where: { userId: req.userId },
-    include: {
-      auction: {
-        include: {
-          user: { select: { id: true, username: true, trustScore: true } },
-          card: { select: { name: true, setName: true, rarity: true, imageUrl: true } },
-          _count: { select: { bids: true } },
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+  const skip = (page - 1) * limit;
+
+  const [watchlist, total] = await Promise.all([
+    prisma.watchlist.findMany({
+      where: { userId: req.userId },
+      skip,
+      take: limit,
+      include: {
+        auction: {
+          include: {
+            user: { select: { id: true, username: true, trustScore: true } },
+            card: { select: { name: true, setName: true, rarity: true, imageUrl: true } },
+            _count: { select: { bids: true } },
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.watchlist.count({ where: { userId: req.userId } }),
+  ]);
+
+  res.json({
+    data: watchlist,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
   });
-  res.json(watchlist);
 }
 
 export async function getNotifications(req: AuthRequest, res: Response) {
@@ -107,51 +140,65 @@ export async function completeTransaction(req: AuthRequest, res: Response) {
   const { auctionId } = req.body;
   const auction = await prisma.auction.findUnique({
     where: { id: auctionId },
-    include: { bids: { orderBy: { amount: "desc" }, take: 1 } },
-  }) as any;
+    select: {
+      id: true, userId: true, status: true,
+      bids: { orderBy: { amount: "desc" as const }, take: 1, select: { id: true, userId: true, amount: true } },
+    },
+  });
   if (!auction) throw new AppError(404, "Auction not found");
   if (auction.userId !== req.userId) throw new AppError(403, "Not your auction");
   if (auction.status !== "ENDED") throw new AppError(400, "Auction not ended");
 
-  const winningBid = auction.bids[0];
+  const winningBid = auction.bids?.[0];
   if (!winningBid) throw new AppError(400, "No winning bid");
 
-  const existingTransaction = await prisma.transaction.findUnique({ where: { auctionId } });
-  const delta = trustDeltaForTransaction(winningBid.amount);
-  const alreadyCompleted = existingTransaction?.status === "COMPLETED";
-
-  // Spočítat fee podle aktuální konfigurace
-  const feeResult = await calculateFee(winningBid.amount, auction.userId);
-
-  await prisma.transaction.upsert({
+  // Kontrola: kupující musí nejdříve zaplatit přes Stripe
+  const existingTransaction = await prisma.transaction.findUnique({
     where: { auctionId },
-    update: { status: "COMPLETED" },
-    create: {
-      amount: winningBid.amount,
-      fee: feeResult.fee,
-      feePercent: feeResult.feePercent,
-      netAmount: feeResult.netAmount,
-      status: "COMPLETED",
-      auctionId, buyerId: winningBid.userId, sellerId: auction.userId,
-    },
+    select: { status: true, stripePaymentIntentId: true },
   });
+  if (!existingTransaction || existingTransaction.status !== "COMPLETED") {
+    throw new AppError(400, "Kupující ještě nezaplatil. Platba musí proběhnout přes Stripe před označením transakce jako dokončené.");
+  }
 
-  if (!alreadyCompleted) {
-    await prisma.user.update({
-      where: { id: auction.userId },
-      data: {
-        trustScore: { increment: delta },
-        totalSales: { increment: 1 },
-        credits: { increment: 1 },
+  // Pokud je již COMPLETED, vrátit success (idempotentní)
+  const feeResult = await calculateFee(winningBid.amount, auction.userId);
+  const delta = trustDeltaForTransaction(winningBid.amount);
+
+  // Atomická operace v transakci: upsert + trust/credits pouze pokud není COMPLETED
+  const result = await prisma.$transaction(async (tx) => {
+    const existing = await tx.transaction.findUnique({
+      where: { auctionId },
+      select: { status: true },
+    });
+    if (existing?.status === "COMPLETED") return { alreadyDone: true, delta: 0 };
+
+    await tx.transaction.upsert({
+      where: { auctionId },
+      update: { status: "COMPLETED" },
+      create: {
+        amount: winningBid.amount,
+        fee: feeResult.fee,
+        feePercent: feeResult.feePercent,
+        netAmount: feeResult.netAmount,
+        status: "COMPLETED",
+        auctionId, buyerId: winningBid.userId, sellerId: auction.userId,
       },
     });
-    await prisma.user.update({
+
+    await tx.user.update({
+      where: { id: auction.userId },
+      data: { trustScore: { increment: delta }, totalSales: { increment: 1 }, credits: { increment: 1 } },
+    });
+    await tx.user.update({
       where: { id: winningBid.userId },
       data: { trustScore: { increment: 1 } },
     });
-  }
 
-  res.json({ success: true, trustDelta: alreadyCompleted ? 0 : delta });
+    return { alreadyDone: false, delta };
+  });
+
+  res.json({ success: true, trustDelta: result.delta });
 }
 
 export async function getRank(req: AuthRequest, res: Response) {
@@ -165,15 +212,17 @@ export async function getRank(req: AuthRequest, res: Response) {
 }
 
 export async function recalculateTrust(req: AuthRequest, res: Response) {
-  if (req.userRole !== "ADMIN") throw new AppError(403, "Not authorized");
+  if (req.userRole?.toLowerCase() !== "admin") throw new AppError(403, "Not authorized");
   const users = await prisma.user.findMany({ select: { id: true, trustScore: true, totalSales: true } });
-  for (const u of users) {
-    const baseTrust = Math.min(u.totalSales * 2, 50);
-    await prisma.user.update({
-      where: { id: u.id },
-      data: { trustScore: Math.max(u.trustScore, baseTrust) },
-    });
-  }
+  await prisma.$transaction(
+    users.map((u) => {
+      const baseTrust = Math.min(u.totalSales * 2, 50);
+      return prisma.user.update({
+        where: { id: u.id },
+        data: { trustScore: Math.max(u.trustScore, baseTrust) },
+      });
+    })
+  );
   res.json({ recalculated: users.length });
 }
 
@@ -184,19 +233,25 @@ export async function claimDailyCredit(req: AuthRequest, res: Response) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (user.lastDailyCredit && user.lastDailyCredit >= today) {
-    throw new AppError(400, "Už jsi dnes získal denní kredit, přijď zítra!");
-  }
-
-  await prisma.user.update({
-    where: { id: req.userId },
+  // Atomic update: only pokud lastDailyCredit je null nebo před dneškem
+  const result = await prisma.user.updateMany({
+    where: {
+      id: req.userId,
+      OR: [
+        { lastDailyCredit: null },
+        { lastDailyCredit: { lt: today } },
+      ],
+    },
     data: {
       credits: { increment: 1 },
       lastDailyCredit: new Date(),
     },
   });
 
-  // Notify about the reward
+  if (result.count === 0) {
+    throw new AppError(400, "Už jsi dnes získal denní kredit, přijď zítra!");
+  }
+
   await prisma.notification.create({
     data: {
       message: "Denní bonus: +1 kredit! 🎉 Využij ho na boostování svých aukcí.",

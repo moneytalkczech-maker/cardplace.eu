@@ -19,7 +19,7 @@ interface CardSet {
 const RARITY_COLORS: Record<string, string> = {
   "⭐⭐⭐⭐": "text-yellow-400",
   "⭐⭐⭐": "text-purple-400",
-  "⭐⭐": "text-blue-400",
+  "⭐⭐": "text-[#00C8FF]",
   "⭐": "text-green-400",
 };
 
@@ -28,7 +28,7 @@ export default function CardSetDetailPage() {
   const [set, setSet] = useState<CardSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [rarityFilter, setRarityFilter] = useState("");
+  const [rarityFilter, setRarityFilter] = useState<string>("");
 
   useEffect(() => {
     if (!setSlug) return;
@@ -46,7 +46,7 @@ export default function CardSetDetailPage() {
     });
   }, [setSlug]);
 
-  if (loading) return <div className="mx-auto max-w-6xl px-4 py-8"><div className="animate-pulse h-96 bg-[#111B2E] rounded-xl" /></div>;
+  if (loading) return <div className="mx-auto max-w-6xl px-4 py-8"><div className="animate-pulse h-96 bg-[#0B1220] rounded-xl" /></div>;
   if (!set) return <div className="mx-auto max-w-6xl px-4 py-8"><p className="text-gray-500">Edice nenalezena</p></div>;
 
   const filtered = set.cards.filter((c) => {
@@ -58,7 +58,7 @@ export default function CardSetDetailPage() {
     return true;
   });
 
-  const rarities = [...new Set(set.cards.map((c) => c.rarity).filter(Boolean))];
+  const rarities = [...new Set(set.cards.map((c) => c.rarity).filter((r): r is string => !!r))];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -103,7 +103,7 @@ export default function CardSetDetailPage() {
               {/* Card image placeholder */}
               <div className="aspect-[3/4] rounded-lg bg-gradient-to-br from-[rgba(0,200,255,0.05)] to-[rgba(0,200,255,0.02)] mb-3 flex items-center justify-center">
                 {card.imageUrl ? (
-                  <img src={card.imageUrl} alt={card.name} className="w-full h-full object-contain" />
+                  <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
                 ) : (
                   <span className="text-4xl opacity-20">
                     {set.category === "pokemon" ? "🃏" : "⚽"}
