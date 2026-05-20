@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -33,5 +33,13 @@ export default function VerifyEmailPage() {
         <Link href="/profile" className="btn-ghost mt-6 inline-flex font-heading">Zkusit znovu</Link>
       )}
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-sm px-4 py-20 text-center"><Loader2 className="h-12 w-12 animate-spin text-[#00C8FF] mx-auto" /></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, X, Upload, Link as LinkIcon, Camera, Loader2, Info,
@@ -17,7 +17,7 @@ const CONDITIONS = [
   { value: "DMG", label: "Damaged", description: "Těžce poškozená, nehratelná", color: "text-red-400" },
 ];
 
-export default function CreateAuctionPage() {
+function CreateAuctionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -510,5 +510,13 @@ export default function CreateAuctionPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CreateAuctionPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-3xl px-4 py-8 animate-pulse"><div className="h-96 rounded-xl bg-[#0B1220]" /></div>}>
+      <CreateAuctionContent />
+    </Suspense>
   );
 }
