@@ -12,8 +12,19 @@ function getLoggedInFlag(): boolean {
 
 function setLoggedInFlag(val: boolean) {
   if (typeof window === "undefined") return;
-  if (val) localStorage.setItem(LOGGED_IN_KEY, "true");
-  else localStorage.removeItem(LOGGED_IN_KEY);
+  if (val) {
+    localStorage.setItem(LOGGED_IN_KEY, "true");
+    document.cookie = "cardplace_logged_in=1; path=/; SameSite=Lax; max-age=2592000";
+  } else {
+    localStorage.removeItem(LOGGED_IN_KEY);
+    document.cookie = "cardplace_logged_in=; path=/; SameSite=Lax; max-age=0";
+    document.cookie = "cardplace_role=; path=/; SameSite=Lax; max-age=0";
+  }
+}
+
+function setRoleCookie(role?: string) {
+  if (typeof window === "undefined") return;
+  if (role) document.cookie = `cardplace_role=${role}; path=/; SameSite=Lax; max-age=2592000`;
 }
 
 interface AuthState {
@@ -45,6 +56,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     setLoggedInFlag(true);
     setApiToken(data.token);
     set({ token: data.token, user: data.user, initialized: true });
+    setRoleCookie(data.user?.role);
   },
 
   register: async (email, username, password, referralCode, acceptedTerms = true, acceptedPrivacy = true) => {
@@ -52,6 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     setLoggedInFlag(true);
     setApiToken(data.token);
     set({ token: data.token, user: data.user, initialized: true });
+    setRoleCookie(data.user?.role);
   },
 
   logout: async () => {
@@ -92,6 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await auth.me();
       set({ user, loading: false, initialized: true });
+      setRoleCookie(user?.role);
     } catch {
       setLoggedInFlag(false);
       setApiToken(null);

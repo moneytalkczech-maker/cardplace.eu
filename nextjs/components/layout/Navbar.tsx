@@ -21,11 +21,15 @@ const authLinks = [
   { path: "/collection", label: "nav.collection", icon: LayoutGrid },
 ];
 
+const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/auth-callback"];
+
 export default function Navbar() {
   const { t } = useTranslation();
   const { user, token, logout, fetchNotifications } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+
+  if (AUTH_ROUTES.some((r) => pathname.startsWith(r))) return null;
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);

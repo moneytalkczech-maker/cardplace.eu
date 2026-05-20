@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, AlertTriangle, Clock, TrendingUp } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import api from "@/lib/api";
 
 interface CardDetail {
@@ -143,6 +144,26 @@ export default function CardDetailPage() {
               <span>Ceny jsou orientační a mohou se lišit podle stavu karty, gradingu, edice, rarity, dopravy a aktuální poptávky.</span>
             </div>
           </div>
+
+          {card.priceSnapshots?.length > 1 && (
+            <div className="mt-8 rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-5">
+              <h2 className="font-heading font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Vývoj ceny</h2>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={card.priceSnapshots.map((s: any) => ({
+                  date: new Date(s.recordedAt).toLocaleDateString("cs-CZ", { month: "short", day: "numeric" }),
+                  CM: s.priceCardmarketAvg ?? undefined,
+                  eBay: s.priceEbayAvg ?? undefined,
+                }))}>
+                  <XAxis dataKey="date" tick={{ fill: "#6b7280", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} width={50} tickFormatter={(v) => `${v} Kč`} />
+                  <Tooltip contentStyle={{ background: "#0B1220", border: "1px solid rgba(0,200,255,0.15)", borderRadius: "8px" }} labelStyle={{ color: "#9ca3af" }} />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Line type="monotone" dataKey="CM" stroke="#00C8FF" strokeWidth={2} dot={false} name="Cardmarket" />
+                  <Line type="monotone" dataKey="eBay" stroke="#A7FF00" strokeWidth={2} dot={false} name="eBay" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           <div className="mt-6">
             <Link href={`/cards/sets/${card.set.slug}`}

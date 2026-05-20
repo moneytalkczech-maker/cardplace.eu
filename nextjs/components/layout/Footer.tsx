@@ -3,11 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 
+const HIDDEN_ON = ["/admin", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/auth-callback"];
+
 export default function Footer() {
   const { t } = useTranslation();
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (HIDDEN_ON.some((r) => pathname?.startsWith(r))) return null;
 
   return (
     <footer className="border-t border-[rgba(0,200,255,0.06)] py-8 mt-auto">
