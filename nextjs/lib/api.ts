@@ -172,4 +172,21 @@ export const contact = {
     api.post("/contact", data).then((r) => r.data),
 };
 
+export const payments = {
+  createCheckout: (auctionId: string) => apiPost<{ url: string }>("/payments/create-checkout", { auctionId }),
+  getConfig: () => apiGet<Record<string, unknown>>("/payments/config"),
+  submitReview: (transactionId: string, rating: number, comment?: string) =>
+    apiPost<{ success: boolean }>("/payments/review", { transactionId, rating, comment }),
+  getReviews: (userId: string) => apiGet<any[]>(`/payments/reviews/${userId}`),
+};
+
+export const monetizationApi = {
+  getPrices: () => apiGet<{ vipMonthly: number; vipYearly: number; verifiedPrice: number; feePhase: string }>("/monetization/prices"),
+  createVipCheckout: (plan: "monthly" | "yearly") => apiPost<{ url: string }>("/monetization/vip/create-checkout", { plan }),
+  createVerifiedCheckout: () => apiPost<{ url: string }>("/monetization/verified/create-checkout"),
+  createBoostCheckout: (auctionId: string, boostType: string) =>
+    apiPost<{ url: string }>("/monetization/boost/create-checkout", { auctionId, boostType }),
+  getFounders: () => apiGet<any[]>("/monetization/founders"),
+};
+
 export default api;
