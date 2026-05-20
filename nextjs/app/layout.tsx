@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Providers from "@/components/providers/Providers";
 import ToastContainer from "@/components/ui/Toast";
+import CookieConsent from "@/components/ui/CookieConsent";
 
 export const metadata: Metadata = {
   title: "CardPlace.eu — Trading Card Marketplace",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <ToastContainer />
+          <CookieConsent />
         </Providers>
       </body>
     </html>
