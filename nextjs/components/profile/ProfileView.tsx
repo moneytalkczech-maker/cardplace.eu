@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Package, Heart, Gift, Copy, Check as CheckIcon, LogOut, ShieldCheck,
@@ -546,9 +547,9 @@ function AuctionCardSimple({ auction }: { auction: any }) {
 
   return (
     <Link href={`/auctions/${auction.id}`} className="card card-hover block group">
-      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-[#050A12] mb-3">
+      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-[#050A12] mb-3 relative">
         {auction.imageUrl ? (
-          <img src={auction.imageUrl} alt={auction.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image src={auction.imageUrl} alt={auction.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Gavel className="h-10 w-10 text-[rgba(0,200,255,0.2)]" />

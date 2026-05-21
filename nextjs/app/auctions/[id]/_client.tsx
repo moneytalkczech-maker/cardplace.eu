@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Clock, Heart, Share2, ShieldCheck, Trophy,
   MessageCircle, AlertCircle, Zap, Gavel, Award, ChevronUp,
@@ -214,9 +215,9 @@ export default function AuctionDetailClient() {
         <div className="lg:col-span-3 space-y-6">
           {/* Obrázek */}
           <div className="relative rounded-2xl overflow-hidden border border-[rgba(0,200,255,0.15)] bg-[#050A12] group shadow-lg">
-            <div className="aspect-[4/3] flex items-center justify-center cursor-pointer" onClick={() => auction.imageUrl && setImageZoom(true)}>
+            <div className="aspect-[4/3] flex items-center justify-center cursor-pointer relative" onClick={() => auction.imageUrl && setImageZoom(true)}>
               {auction.imageUrl ? (
-                <img src={auction.imageUrl} alt={auction.title} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                <Image src={auction.imageUrl} alt={auction.title} fill sizes="(max-width: 768px) 100vw, 600px" className="object-contain transition-transform duration-300 group-hover:scale-105" />
               ) : (
                 <Gavel className="h-20 w-20 text-[rgba(0,200,255,0.15)]" />
               )}
@@ -576,7 +577,7 @@ export default function AuctionDetailClient() {
           <button onClick={() => setImageZoom(false)} className="absolute top-6 right-6 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
             <XIcon className="h-6 w-6 text-white" />
           </button>
-          <img src={auction.imageUrl} alt={auction.title} className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+          <Image src={auction.imageUrl} alt={auction.title} width={1200} height={900} className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, Filter, SortAsc, Loader2, Gavel } from "lucide-react";
 import { auctions } from "@/lib/api";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -36,10 +37,12 @@ function AuctionCard({ auction }: { auction: Auction }) {
     >
       <div className="aspect-square rounded-lg overflow-hidden bg-[rgba(0,200,255,0.04)] mb-3 relative">
         {auction.imageUrl ? (
-          <img
+          <Image
             src={auction.imageUrl}
             alt={auction.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">🃏</div>
