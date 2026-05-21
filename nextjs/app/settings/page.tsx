@@ -91,7 +91,7 @@ export default function SettingsPage() {
     if (deleteConfirm !== user?.username) return;
     setDeletingAccount(true);
     try {
-      await api.post("/profile/delete-account");
+      await api.post("/profile/delete-account", { confirmDelete: "DELETE_MY_ACCOUNT" });
       logout();
       router.push("/");
     } catch (err: any) {
