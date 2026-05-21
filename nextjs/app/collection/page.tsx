@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Trash2, Minus, Plus as PlusIcon, BookOpen, ChevronDown, Search, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { searchCards, type MarketCard } from "@/lib/CardsDB";
@@ -250,7 +251,9 @@ export default function CollectionPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex gap-3 flex-1 min-w-0">
                     {item.cardImage && (
-                      <img src={item.cardImage} alt={item.cardName} className="w-12 h-16 object-cover rounded-lg flex-shrink-0" />
+                      <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden">
+                        <Image src={item.cardImage} alt={item.cardName} fill className="object-cover" sizes="48px" />
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading font-bold text-sm truncate">{item.cardName}</h3>
