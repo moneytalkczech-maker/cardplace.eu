@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@/sentry.config";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Providers from "@/components/providers/Providers";

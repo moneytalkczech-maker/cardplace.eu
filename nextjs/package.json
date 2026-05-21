@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
+    "@sentry/nextjs": "^10.53.1",
     "axios": "^1.16.1",
     "framer-motion": "^12.39.0",
     "lucide-react": "^1.16.0",
