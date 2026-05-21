@@ -131,6 +131,16 @@ export const wantedApi = {
   remove: (id: string) => api.delete(`/wanted/${id}`).then((r) => r.data),
 };
 
+export const messagesApi = {
+  listConversations: () => api.get("/messages").then((r) => r.data),
+  getOrCreate: (otherUserId: string) => api.post(`/messages/with/${otherUserId}`).then((r) => r.data),
+  getMessages: (conversationId: string, cursor?: string) =>
+    api.get(`/messages/${conversationId}`, cursor ? { params: { cursor } } : undefined).then((r) => r.data),
+  sendMessage: (conversationId: string, body: string) =>
+    api.post(`/messages/${conversationId}`, { body }).then((r) => r.data),
+  getUnreadCount: () => api.get("/messages/unread").then((r) => r.data as { unread: number }),
+};
+
 export const adminApi = {
   getStats: () => api.get("/admin/stats").then((r) => r.data),
   listUsers: (page = 1, limit = 50) => api.get("/admin/users", { params: { page, limit } }).then((r) => r.data),

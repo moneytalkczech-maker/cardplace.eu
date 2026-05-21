@@ -26,6 +26,7 @@ import monetizationRoutes from "./routes/monetization";
 import profileRoutes from "./routes/profile";
 import reportRoutes from "./routes/reports";
 import contactRoutes from "./routes/contact";
+import messageRoutes from "./routes/messages";
 import cardSetsRoutes from "./routes/cardSets";
 import databaseCardsRoutes from "./routes/databaseCards";
 import prisma from "./utils/prisma";
@@ -162,6 +163,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/monetization", monetizationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/messages", messageRoutes);
 app.use("/api/profile", profileRoutes);
 // Status monitor — admin only, pouze v development/staging
 // V produkci vypnut — odhaluje interní metriky (CPU, memory, response times)

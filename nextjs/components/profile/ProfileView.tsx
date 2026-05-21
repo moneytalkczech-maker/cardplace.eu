@@ -186,17 +186,22 @@ export default function ProfileView({ userId }: Props) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {!isMe && token && userId && (
-              <button
-                onClick={async () => {
-                  const r: any = await followApi.toggle(userId);
-                  setIsFollowing(r.following);
-                }}
-                className={`btn text-sm font-heading ${isFollowing ? "btn-ghost text-[#00C8FF] border border-[rgba(0,200,255,0.3)]" : "btn-primary"}`}
-              >
-                {isFollowing ? <><UserCheck className="h-4 w-4" /> Sleduješ</> : <><UserPlus className="h-4 w-4" /> Sledovat</>}
-              </button>
+              <>
+                <button
+                  onClick={async () => {
+                    const r: any = await followApi.toggle(userId);
+                    setIsFollowing(r.following);
+                  }}
+                  className={`btn text-sm font-heading ${isFollowing ? "btn-ghost text-[#00C8FF] border border-[rgba(0,200,255,0.3)]" : "btn-primary"}`}
+                >
+                  {isFollowing ? <><UserCheck className="h-4 w-4" /> Sleduješ</> : <><UserPlus className="h-4 w-4" /> Sledovat</>}
+                </button>
+                <Link href={`/messages?with=${userId}`} className="btn-secondary text-sm font-heading flex items-center gap-1">
+                  <MessageSquare className="h-4 w-4" /> Zpráva
+                </Link>
+              </>
             )}
             {isMe && (
               <button onClick={() => { logout(); router.push("/"); }} className="btn-ghost text-sm">

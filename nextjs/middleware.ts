@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AUTH_REQUIRED = ["/scan", "/collection", "/settings", "/auctions/create", "/profile", "/wanted"];
+const AUTH_REQUIRED = ["/scan", "/collection", "/settings", "/auctions/create", "/profile", "/wanted", "/messages"];
 const ADMIN_REQUIRED = ["/admin"];
 
 function isLoggedIn(req: NextRequest): boolean {
@@ -41,6 +41,7 @@ export const config = {
     "/auctions/create/:path*",
     "/profile/:path*",
     "/wanted/:path*",
+    "/messages/:path*",
     "/admin/:path*",
   ],
 };

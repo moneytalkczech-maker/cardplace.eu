@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Plus, Scan, Bell, User, LogOut, Menu, X, Gavel, Zap,
-  Shield, ChevronDown, Database, Heart, LayoutGrid, Search, Bolt
+  Shield, ChevronDown, Database, Heart, LayoutGrid, Search, Bolt, MessageSquare
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -200,6 +200,9 @@ export default function Navbar() {
                         <div className="p-2 space-y-1">
                           <Link href="/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                             <User className="h-4 w-4" /> {t("nav.profile")}
+                          </Link>
+                          <Link href="/messages" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-colors">
+                            <MessageSquare className="h-4 w-4" /> Zprávy
                           </Link>
                           <Link href="/scan" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                             <Scan className="h-4 w-4" /> {t("nav.scan")}
