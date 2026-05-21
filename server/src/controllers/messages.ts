@@ -32,14 +32,14 @@ export async function listConversations(req: AuthRequest, res: Response) {
 
 export async function getOrCreateConversation(req: AuthRequest, res: Response) {
   if (!req.userId) throw new AppError(401, "Unauthorized");
-  const { otherUserId } = req.params;
+  const otherUserId = req.params.otherUserId as string;
   if (otherUserId === req.userId) throw new AppError(400, "Cannot message yourself");
 
   const other = await prisma.user.findUnique({ where: { id: otherUserId }, select: { id: true } });
   if (!other) throw new AppError(404, "User not found");
 
   // user1Id is always the lesser id for uniqueness
-  const [u1, u2] = [req.userId, otherUserId].sort();
+  const [u1, u2] = [req.userId, otherUserId].sort() as [string, string];
 
   const conversation = await prisma.conversation.upsert({
     where: { user1Id_user2Id: { user1Id: u1, user2Id: u2 } },
@@ -56,7 +56,7 @@ export async function getOrCreateConversation(req: AuthRequest, res: Response) {
 
 export async function getMessages(req: AuthRequest, res: Response) {
   if (!req.userId) throw new AppError(401, "Unauthorized");
-  const { conversationId } = req.params;
+  const conversationId = req.params.conversationId as string;
   const limit = Math.min(Number(req.query.limit) || 50, 100);
   const cursor = req.query.cursor as string | undefined;
 
@@ -86,7 +86,7 @@ export async function getMessages(req: AuthRequest, res: Response) {
 
 export async function sendMessage(req: AuthRequest, res: Response) {
   if (!req.userId) throw new AppError(401, "Unauthorized");
-  const { conversationId } = req.params;
+  const conversationId = req.params.conversationId as string;
   const { body } = req.body;
   if (!body?.trim()) throw new AppError(400, "Message body required");
   if (body.length > 2000) throw new AppError(400, "Message too long (max 2000 chars)");
