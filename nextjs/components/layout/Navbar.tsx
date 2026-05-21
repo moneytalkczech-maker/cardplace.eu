@@ -24,7 +24,7 @@ const authLinks = [
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/auth-callback"];
 
 export default function Navbar() {
-  const { t } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const { user, token, logout, fetchNotifications } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -224,6 +224,13 @@ export default function Navbar() {
                 </Link>
               )}
               <button
+                onClick={() => setLocale(locale === "cs" ? "en" : "cs")}
+                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-heading font-bold text-gray-400 hover:text-white border border-[rgba(255,255,255,0.08)] hover:border-[rgba(0,200,255,0.3)] hover:bg-[rgba(0,200,255,0.06)] transition-all"
+                title="Přepnout jazyk / Switch language"
+              >
+                {locale === "cs" ? "EN" : "CS"}
+              </button>
+              <button
                 className="lg:hidden p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-all"
                 onClick={() => setMenuOpen(!menuOpen)}
               >
@@ -256,15 +263,29 @@ export default function Navbar() {
                   <Link href="/scan" className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[rgba(0,200,255,0.2)] text-[#00C8FF] font-heading font-medium">
                     <Scan className="h-5 w-5" /> {t("nav.scan")}
                   </Link>
+                  <button
+                    onClick={() => setLocale(locale === "cs" ? "en" : "cs")}
+                    className="flex items-center justify-center px-4 py-3 rounded-xl border border-[rgba(255,255,255,0.1)] text-gray-400 font-heading font-bold text-sm"
+                  >
+                    {locale === "cs" ? "EN" : "CS"}
+                  </button>
                   <button onClick={() => { logout(); router.push("/"); }} className="flex items-center justify-center px-4 py-3 rounded-xl border border-[rgba(255,0,68,0.3)] text-[#FF3366]">
                     <LogOut className="h-5 w-5" />
                   </button>
                 </div>
               </div>
             ) : (
-              <Link href="/login" className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-[#A7FF00] to-[#5CFF00] text-[#050A12] font-semibold font-heading">
-                {t("nav.signin")}
-              </Link>
+              <div className="space-y-2">
+                <Link href="/login" className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-[#A7FF00] to-[#5CFF00] text-[#050A12] font-semibold font-heading">
+                  {t("nav.signin")}
+                </Link>
+                <button
+                  onClick={() => setLocale(locale === "cs" ? "en" : "cs")}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] text-gray-400 font-heading font-bold text-sm"
+                >
+                  {locale === "cs" ? "Switch to English" : "Přepnout na češtinu"}
+                </button>
+              </div>
             )}
           </div>
         </div>
