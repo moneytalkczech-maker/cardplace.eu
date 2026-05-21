@@ -1,21 +1,21 @@
 # Render Blueprint — Infrastructure as Code
 # https://render.com/docs/blueprint-spec
 #
-# Tento soubor definuje celou infrastrukturu:
+# Infrastruktura:
 # - API server (Node.js + Express)
-# - Frontend (React + Vite, static site)
+# - Frontend (Next.js 14 App Router — Node.js web service)
 # - PostgreSQL databáze
 #
-# Po prvním deployi:
-# 1. V Render Dashboard nastav ručně chybějící env proměnné:
-#    - STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
-#    - RESEND_API_KEY, EMAIL_FROM
-#    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-#    - POKEMON_TCG_API_KEY, EBAY_APP_ID
-#    - SENTRY_DSN (volitelné)
-# 2. Až nastavíš custom doménu v Render Dashboard → cardplace-client → Settings → Custom Domain:
-#    - Přidej cardplace.eu (a www.cardplace.eu)
-# 3. API zůstává na https://cardplace-api.onrender.com (free tier nepodporuje custom domény pro web services)
+# Po prvním deployi nastav v Render Dashboard tyto env proměnné:
+#   cardplace-api:
+#     STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+#     RESEND_API_KEY, EMAIL_FROM
+#     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+#     SENTRY_DSN (volitelné)
+#     ANTHROPIC_API_KEY (pouze pro Next.js frontend — nastavit v cardplace-frontend)
+#   cardplace-frontend:
+#     ANTHROPIC_API_KEY
+#     NEXT_PUBLIC_SOCKET_URL=https://cardplace-api.onrender.com
 
 services:
   # ─── Backend API (Node.js / Express) ───────────────────────
@@ -52,32 +52,25 @@ services:
       - key: GBP_TO_CZK
         value: "29.5"
 
-  # ─── Frontend (React / Vite) ──────────────────────────────
-  - type: static
-    name: cardplace-client
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/dist
-    pullRequestPreviewsEnabled: true
-    headers:
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+  # ─── Frontend (Next.js 14 App Router) ────────────────────────
+  - type: web
+    name: cardplace-frontend
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd nextjs && npm install && npm run build
+    startCommand: cd nextjs && npm run start
+    healthCheckPath: /
+    autoDeploy: true
     envVars:
-      - key: VITE_API_URL
-        value: https://cardplace-api.onrender.com/api
+      - key: NODE_ENV
+        value: production
+      - key: EXPRESS_URL
+        value: http://cardplace-api:10000
+      - key: NEXT_PUBLIC_API_URL
+        value: /api
+      - key: NEXT_PUBLIC_SOCKET_URL
+        value: https://cardplace-api.onrender.com
 
 databases:
   # ─── PostgreSQL (Render Managed) ──────────────────────────

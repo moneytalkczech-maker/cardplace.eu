@@ -32,6 +32,7 @@ import prisma from "./utils/prisma";
 import logger from "./utils/logger";
 import { errorHandler } from "./middleware/errorHandler";
 import { cardSetsSitemap, cardsSitemap } from "./controllers/sitemapController";
+import { sendWonEmail, sendSoldEmail } from "./utils/email";
 
 dotenv.config();
 
@@ -237,12 +238,40 @@ main();
 setInterval(async () => {
   const now = new Date();
   try {
-    // Ukončit expirované aukce
-    const result = await prisma.auction.updateMany({
+    // Najít aukce k ukončení (s vítězi pro notifikace)
+    const expiring = await prisma.auction.findMany({
       where: { status: "ACTIVE", endTime: { lte: now } },
-      data: { status: "ENDED" },
+      select: {
+        id: true, title: true, userId: true,
+        user: { select: { email: true, username: true } },
+        bids: { orderBy: { amount: "desc" }, take: 1, select: { userId: true, user: { select: { email: true, username: true } } } },
+      },
     });
-    if (result.count > 0) logger.info({ count: result.count }, "Expired auctions cleaned up");
+
+    if (expiring.length > 0) {
+      await prisma.auction.updateMany({
+        where: { id: { in: expiring.map((a) => a.id) } },
+        data: { status: "ENDED" },
+      });
+      logger.info({ count: expiring.length }, "Expired auctions ended");
+
+      // Notifikace vítěze a prodávajícího
+      for (const auction of expiring) {
+        const winner = auction.bids[0];
+        if (winner) {
+          // In-app notifikace
+          await prisma.notification.createMany({
+            data: [
+              { userId: winner.userId, type: "AUCTION_WON", message: `Vyhrál jsi aukci: "${auction.title}"`, link: `/auctions/${auction.id}` },
+              { userId: auction.userId, type: "AUCTION_SOLD", message: `Tvoje aukce byla prodána: "${auction.title}"`, link: `/auctions/${auction.id}` },
+            ],
+          });
+          // Emailové notifikace
+          sendWonEmail(winner.user.email, winner.user.username, auction.title, auction.id).catch(() => {});
+          sendSoldEmail(auction.user.email, auction.user.username, auction.title).catch(() => {});
+        }
+      }
+    }
 
     // Smazat expirované revoked tokeny
     const cleaned = await prisma.revokedToken.deleteMany({

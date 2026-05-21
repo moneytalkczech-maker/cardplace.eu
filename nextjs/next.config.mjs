@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   async rewrites() {
     const expressUrl = process.env.EXPRESS_URL || "http://localhost:3001";
     return [
