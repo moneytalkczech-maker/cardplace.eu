@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Zakázané položky — CardPlace.eu",
+  description: "Přehled zakázaných položek a padělků na platformě CardPlace.eu.",
+};
 
 export default function LegalProhibitedPage() {
   return (

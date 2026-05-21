@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Obchodní podmínky — CardPlace.eu",
+  description: "Obchodní podmínky platformy CardPlace.eu pro aukce sběratelských karet.",
+};
 
 export default function LegalTermsPage() {
   return (

@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Ochrana osobních údajů (GDPR) — CardPlace.eu",
+  description: "Zásady ochrany osobních údajů a GDPR informace platformy CardPlace.eu.",
+};
 
 export default function LegalPrivacyPage() {
   return (

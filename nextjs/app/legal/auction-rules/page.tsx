@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Pravidla aukcí — CardPlace.eu",
+  description: "Pravidla aukcí a podmínky pro prodejce a kupující na CardPlace.eu.",
+};
 
 export default function LegalAuctionRulesPage() {
   return (

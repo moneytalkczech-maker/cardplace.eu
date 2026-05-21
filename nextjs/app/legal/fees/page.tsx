@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Ceník poplatků — CardPlace.eu",
+  description: "Přehled poplatků za aukce a prodej na platformě CardPlace.eu.",
+};
 
 export default function LegalFeesPage() {
   return (
