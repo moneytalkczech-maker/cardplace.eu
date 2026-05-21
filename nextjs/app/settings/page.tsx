@@ -95,7 +95,7 @@ export default function SettingsPage() {
       logout();
       router.push("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Nepodařilo se smazat účet.");
+      toast("error", err.response?.data?.error || "Nepodařilo se smazat účet.");
       setDeletingAccount(false);
     }
   };
