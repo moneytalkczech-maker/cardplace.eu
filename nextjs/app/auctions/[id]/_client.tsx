@@ -415,6 +415,27 @@ export default function AuctionDetailClient() {
             {user?.id === auction.user.id && (
               <div className="space-y-2 pt-2 border-t border-[rgba(0,200,255,0.08)]">
                 <p className="text-xs text-gray-500 text-center">Toto je vaše aukce</p>
+                {isActive && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await auctions.boost(id);
+                        setAuction((prev) => prev ? { ...prev, featured: res.featured } : prev);
+                        toast("success", res.featured ? "Aukce je nyní Featured ⚡ (−1 kredit)" : "Featured deaktivováno (+1 kredit)");
+                      } catch (e: any) {
+                        toast("error", e.response?.data?.error || "Boost se nezdařil");
+                      }
+                    }}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border font-heading font-bold text-sm transition-all ${
+                      auction.featured
+                        ? "bg-[rgba(167,255,0,0.1)] border-[rgba(167,255,0,0.4)] text-[#A7FF00] hover:bg-[rgba(167,255,0,0.15)]"
+                        : "border-[rgba(0,200,255,0.3)] text-[#00C8FF] hover:bg-[rgba(0,200,255,0.06)]"
+                    }`}
+                  >
+                    <Zap className="h-4 w-4" />
+                    {auction.featured ? "Featured aktivní — deaktivovat" : `${t("detail.boost")} (1 kredit)`}
+                  </button>
+                )}
                 {!isActive && auction.status !== "COMPLETED" && (
                   <button onClick={handleCompleteTransaction} disabled={completing} className="btn-primary w-full font-heading">
                     {completing ? "Zpracovávám..." : "Dokončit transakci"}
