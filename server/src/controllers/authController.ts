@@ -9,6 +9,7 @@ import { AppError } from "../middleware/errorHandler";
 import logger from "../utils/logger";
 import { createAuditLog } from "../utils/auditLog";
 import { sendVerificationEmail } from "../utils/emailVerification";
+import { sendWelcomeEmail } from "../utils/email";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -78,6 +79,7 @@ export async function register(req: AuthRequest, res: Response) {
 
   // Odeslat verifikační email (nehází chybu pokud selže)
   sendVerificationEmail(user.id, user.email).catch(() => {});
+  sendWelcomeEmail(user.email, user.username).catch(() => {});
 
   res.json({
     token,
