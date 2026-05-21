@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ExternalLink, AlertTriangle, Clock, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import api from "@/lib/api";
@@ -40,9 +41,9 @@ export default function CardDetailClient() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="aspect-[3/4] rounded-xl bg-gradient-to-br from-[rgba(0,200,255,0.08)] to-[rgba(0,200,255,0.02)] border border-[rgba(0,200,255,0.1)] flex items-center justify-center overflow-hidden">
+        <div className="aspect-[3/4] rounded-xl bg-gradient-to-br from-[rgba(0,200,255,0.08)] to-[rgba(0,200,255,0.02)] border border-[rgba(0,200,255,0.1)] flex items-center justify-center overflow-hidden relative">
           {card.imageUrl ? (
-            <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
+            <Image src={card.imageUrl} alt={card.name} fill className="object-contain" sizes="(max-width: 768px) 100vw, 50vw" />
           ) : (
             <span className="text-8xl opacity-10">{card.set.category === "pokemon" ? "🃏" : "⚽"}</span>
           )}

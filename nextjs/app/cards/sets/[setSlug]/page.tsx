@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Grid3X3, Search, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 
@@ -97,9 +98,9 @@ export default function CardSetDetailPage() {
           {filtered.map((card) => (
             <Link key={card.id} href={`/cards/card/${card.id}`}
               className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-4 hover:border-[rgba(0,200,255,0.25)] transition-all group">
-              <div className="aspect-[3/4] rounded-lg bg-gradient-to-br from-[rgba(0,200,255,0.05)] to-[rgba(0,200,255,0.02)] mb-3 flex items-center justify-center overflow-hidden">
+              <div className="aspect-[3/4] rounded-lg bg-gradient-to-br from-[rgba(0,200,255,0.05)] to-[rgba(0,200,255,0.02)] mb-3 flex items-center justify-center overflow-hidden relative">
                 {card.imageUrl ? (
-                  <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
+                  <Image src={card.imageUrl} alt={card.name} fill className="object-contain" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                 ) : (
                   <span className="text-4xl opacity-20">
                     {set.category === "pokemon" ? "🃏" : "⚽"}

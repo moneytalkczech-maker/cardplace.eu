@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Save, Camera, Lock, User, Mail, Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
@@ -166,9 +167,9 @@ export default function SettingsPage() {
         </div>
         {avatarMsg && <StatusMsg msg={avatarMsg} />}
         <div className="flex items-center gap-6">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#009DFF] to-[#00C8FF] text-3xl font-bold font-heading shadow-[0_0_30px_rgba(0,200,255,0.2)] overflow-hidden flex-shrink-0">
+          <div className="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-[#009DFF] to-[#00C8FF] text-3xl font-bold font-heading shadow-[0_0_30px_rgba(0,200,255,0.2)] overflow-hidden flex-shrink-0">
             {(user as any)?.avatarUrl ? (
-              <img src={(user as any).avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              <Image src={(user as any).avatarUrl} alt="Avatar" fill className="object-cover" sizes="80px" />
             ) : (
               user?.username?.[0]?.toUpperCase() || "?"
             )}
