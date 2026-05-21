@@ -39,6 +39,10 @@ export default function AuctionDetailClient() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBidConfirm, setShowBidConfirm] = useState(false);
   const [showBuyNowConfirm, setShowBuyNowConfirm] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("fake");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   const countdown = useCountdown(auction?.endTime || new Date().toISOString());
 
@@ -160,6 +164,19 @@ export default function AuctionDetailClient() {
     setCompleting(false);
   };
 
+  const handleReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auction) return;
+    setReporting(true);
+    try {
+      await api.post("/reports", { auctionId: auction.id, reason: reportReason, description: reportDesc });
+      toast("success", "Nahlášení bylo odesláno, děkujeme");
+      setShowReportModal(false);
+      setReportDesc("");
+    } catch { toast("error", "Nahlášení se nepodařilo odeslat"); }
+    setReporting(false);
+  };
+
   if (fetchError) {
     return (
       <div className="container-premium py-20 text-center">
@@ -232,7 +249,11 @@ export default function AuctionDetailClient() {
                 <Share2 className="h-5 w-5" />
               </button>
               {token && user?.id !== auction.user.id && (
-                <button className="rounded-xl p-2.5 bg-black/50 border border-[rgba(255,0,68,0.2)] text-gray-400 hover:text-[#FF3366] transition-all">
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="rounded-xl p-2.5 bg-black/50 border border-[rgba(255,0,68,0.2)] text-gray-400 hover:text-[#FF3366] transition-all"
+                  title="Nahlásit aukci"
+                >
                   <Flag className="h-5 w-5" />
                 </button>
               )}
@@ -475,6 +496,58 @@ export default function AuctionDetailClient() {
         onConfirm={handleBuyNow}
         onCancel={() => setShowBuyNowConfirm(false)}
       />
+
+      {/* Report modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowReportModal(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-[#0D1522] border border-[rgba(255,51,102,0.3)] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
+                <Flag className="h-5 w-5 text-[#FF3366]" /> Nahlásit aukci
+              </h3>
+              <button onClick={() => setShowReportModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleReport} className="space-y-4">
+              <div>
+                <label className="block text-sm font-heading font-semibold text-gray-300 mb-1.5">Důvod nahlášení</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="input"
+                >
+                  <option value="fake">Falešná nebo neexistující karta</option>
+                  <option value="stolen_image">Ukradené fotky</option>
+                  <option value="scam">Podvod / scam</option>
+                  <option value="inappropriate">Nevhodný obsah</option>
+                  <option value="suspicious_price">Podezřelá cena</option>
+                  <option value="other">Jiný důvod</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-heading font-semibold text-gray-300 mb-1.5">Popis (volitelné)</label>
+                <textarea
+                  value={reportDesc}
+                  onChange={(e) => setReportDesc(e.target.value)}
+                  className="input min-h-[80px] resize-none"
+                  placeholder="Přidej více informací..."
+                  maxLength={500}
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 btn-secondary font-heading">
+                  Zrušit
+                </button>
+                <button type="submit" disabled={reporting} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FF3366]/20 border border-[#FF3366]/40 text-[#FF3366] font-heading font-bold hover:bg-[#FF3366]/30 disabled:opacity-40 transition-all">
+                  {reporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
+                  Nahlásit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Zoom obrázku */}
       {imageZoom && auction.imageUrl && (
