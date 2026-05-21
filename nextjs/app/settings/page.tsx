@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Save, Camera, Lock, User, Mail, Loader2 } from "lucide-react";
+import { Save, Camera, Lock, User, Mail, Loader2, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/components/ui/Toast";
@@ -8,7 +9,8 @@ import { toast } from "@/components/ui/Toast";
 type Msg = { type: "success" | "error"; text: string } | null;
 
 export default function SettingsPage() {
-  const { user, loadUser } = useAuthStore();
+  const { user, loadUser, logout } = useAuthStore();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [username, setUsername] = useState("");
@@ -24,6 +26,8 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -80,6 +84,20 @@ export default function SettingsPage() {
     }
     setUploadingAvatar(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (deleteConfirm !== user?.username) return;
+    setDeletingAccount(true);
+    try {
+      await api.post("/profile/delete-account");
+      logout();
+      router.push("/");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Nepodařilo se smazat účet.");
+      setDeletingAccount(false);
+    }
   };
 
   return (
@@ -169,6 +187,35 @@ export default function SettingsPage() {
           </div>
         </div>
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleAvatarUpload} />
+      </div>
+
+      {/* Delete Account */}
+      <div className="rounded-xl border border-[rgba(239,68,68,0.2)] bg-[#0B1220] p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Trash2 className="h-6 w-6 text-red-400" />
+          <h2 className="text-xl font-bold font-heading text-red-400">Smazat účet</h2>
+        </div>
+        <p className="text-sm text-gray-400 mb-4">
+          Tato akce je nevratná. Smaže se tvůj účet, všechny aukce a data. Pro potvrzení zadej své uživatelské jméno{" "}
+          <span className="font-bold text-white">@{user?.username}</span>.
+        </p>
+        <form onSubmit={handleDeleteAccount} className="space-y-4">
+          <input
+            type="text"
+            className="input border-[rgba(239,68,68,0.3)] focus:border-red-400"
+            placeholder={`Zadej "${user?.username}" pro potvrzení`}
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={deletingAccount || deleteConfirm !== user?.username}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600/20 border border-red-600/40 text-red-400 font-heading font-bold text-sm hover:bg-red-600/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            {deletingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Trvale smazat účet
+          </button>
+        </form>
       </div>
     </div>
   );
