@@ -17,11 +17,15 @@ interface DataSource {
 export default function AdminAiControl() {
   const [sources, setSources] = useState<DataSource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setError(null);
     api.get("/card-data-sources").then((r) => {
       setSources(Array.isArray(r.data) ? r.data : []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání zdrojů dat");
+    }).finally(() => setLoading(false));
   }, []);
 
   const typeColors: Record<string, string> = {
@@ -33,6 +37,7 @@ export default function AdminAiControl() {
 
   return (
     <AdminLayout title="AI Ovládání">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-5 col-span-2">
           <div className="flex items-center gap-2 mb-4">

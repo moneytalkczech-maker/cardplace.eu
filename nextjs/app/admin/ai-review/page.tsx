@@ -18,16 +18,21 @@ interface Auction {
 export default function AdminAiReview() {
   const [pending, setPending] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setError(null);
     api.get("/admin/auctions", { params: { limit: 20 } }).then((r) => {
       const data = r.data?.data || [];
       setPending(data.filter((a: Auction) => a.aiRiskLevel === "high" || a.aiRiskLevel === "critical"));
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání dat");
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
     <AdminLayout title="AI Review">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-4">
           <div className="flex items-center gap-2 mb-1">

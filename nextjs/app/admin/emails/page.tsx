@@ -20,15 +20,19 @@ interface EmailTemplate {
 export default function AdminEmails() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
 
   const fetchTemplates = () => {
     setLoading(true);
+    setError(null);
     adminApi.listEmailTemplates().then((data: any) => {
       setTemplates(Array.isArray(data) ? data : []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání šablon");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchTemplates(); }, []);
@@ -58,6 +62,7 @@ export default function AdminEmails() {
 
   return (
     <AdminLayout title="Emailové šablony">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-xl bg-[#0B1220]" />)}

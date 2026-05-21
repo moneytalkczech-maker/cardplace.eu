@@ -17,16 +17,19 @@ interface LegalDoc {
 export default function AdminAiLegalCheck() {
   const [docs, setDocs] = useState<LegalDoc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [cardsNeedReview, setCardsNeedReview] = useState(0);
 
   useEffect(() => {
+    setError(null);
     Promise.all([
-      api.get("/admin/legal-documents").then((r) => setDocs(Array.isArray(r.data) ? r.data : [])).catch(() => {}),
-      api.get("/admin/cards", { params: { limit: 1 } }).then((r) => {
-        // Just checking if there are any cards with license issues
+      api.get("/admin/legal-documents").then((r) => setDocs(Array.isArray(r.data) ? r.data : [])),
+      api.get("/admin/cards", { params: { limit: 1 } }).then(() => {
         setCardsNeedReview(0);
-      }).catch(() => {}),
-    ]).finally(() => setLoading(false));
+      }),
+    ]).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání dat");
+    }).finally(() => setLoading(false));
   }, []);
 
   const publishedCount = docs.filter((d) => d.published).length;
@@ -34,6 +37,7 @@ export default function AdminAiLegalCheck() {
 
   return (
     <AdminLayout title="AI Legal Check">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-4">
           <div className="flex items-center gap-2 mb-1">

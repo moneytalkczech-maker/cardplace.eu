@@ -25,11 +25,13 @@ const GROUP_LABELS: Record<string, string> = {
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
+    setError(null);
     adminApi.listSettings()
       .then((data: any) => {
         const list = Array.isArray(data) ? data : data.data || [];
@@ -38,7 +40,9 @@ export default function AdminSettingsPage() {
         list.forEach((s: SiteSetting) => { vals[s.id] = s.value; });
         setEditedValues(vals);
       })
-      .catch(() => {})
+      .catch((err: any) => {
+        setError(err.response?.data?.error || "Chyba při načítání nastavení");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -65,6 +69,7 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout title="Nastavení">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (

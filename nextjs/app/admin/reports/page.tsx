@@ -25,6 +25,7 @@ export default function AdminReportsPage() {
   const { t } = useTranslation();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
 
   const REASON_LABELS: Record<string, string> = {
@@ -37,8 +38,11 @@ export default function AdminReportsPage() {
   };
 
   const fetchReports = () => {
+    setError(null);
     const params = filter ? `?status=${filter}` : "";
-    api.get(`/reports${params}`).then((r) => setReports(r.data)).catch(() => {}).finally(() => setLoading(false));
+    api.get(`/reports${params}`).then((r) => setReports(r.data)).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání nahlášení");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchReports(); }, [filter]);
@@ -55,7 +59,7 @@ export default function AdminReportsPage() {
 
   return (
     <AdminLayout title={t("admin.reports")}>
-
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="flex gap-2 mb-6 flex-wrap">
         {["", "pending", "reviewed", "resolved", "rejected"].map((s) => (
           <button key={s} onClick={() => setFilter(s)} className={`btn text-sm font-heading ${filter === s ? "btn-primary" : "btn-ghost"}`}>

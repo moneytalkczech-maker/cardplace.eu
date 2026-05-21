@@ -25,6 +25,7 @@ export default function AdminUsers() {
   const { t } = useTranslation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -32,12 +33,15 @@ export default function AdminUsers() {
 
   const fetchUsers = (p: number = page) => {
     setLoading(true);
+    setError(null);
     adminApi.listUsers(p, 50).then((response: any) => {
       const result = response.data ? response.data : response;
       setUsers(Array.isArray(result) ? result : result.data || []);
       setTotalPages(result.totalPages || 1);
       setTotal(result.total || 0);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání uživatelů");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchUsers(page); }, [page]);
@@ -90,6 +94,7 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout title={t("admin.users")}>
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="mb-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />

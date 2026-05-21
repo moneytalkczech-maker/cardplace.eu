@@ -18,17 +18,21 @@ interface SecuritySetting {
 export default function AdminSecurity() {
   const [settings, setSettings] = useState<SecuritySetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
 
   const fetchSettings = () => {
     setLoading(true);
+    setError(null);
     adminApi.getSecuritySettings().then((data: any) => {
       const arr = Array.isArray(data) ? data : [];
       setSettings(arr);
       const v: Record<string, string> = {};
       arr.forEach((s: SecuritySetting) => { v[s.key] = s.value; });
       setValues(v);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání nastavení");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchSettings(); }, []);
@@ -51,6 +55,7 @@ export default function AdminSecurity() {
 
   return (
     <AdminLayout title="Bezpečnost">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-xl bg-[#0B1220]" />)}

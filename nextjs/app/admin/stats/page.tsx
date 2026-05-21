@@ -32,8 +32,10 @@ const colorMap: Record<string, string> = {
 export default function AdminStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setError(null);
     adminApi.getStats()
       .then((response: any) => {
         const data = response.data || response;
@@ -45,12 +47,15 @@ export default function AdminStats() {
           collections: data.collections ?? data.collectionCount ?? 0,
         });
       })
-      .catch(() => {})
+      .catch((err: any) => {
+        setError(err.response?.data?.error || "Chyba při načítání statistik");
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <AdminLayout title="Statistiky">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

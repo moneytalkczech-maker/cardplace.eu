@@ -22,15 +22,19 @@ interface LegalDocument {
 export default function AdminLegal() {
   const [docs, setDocs] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
   const fetchDocs = () => {
     setLoading(true);
+    setError(null);
     adminApi.listLegalDocuments().then((data: any) => {
       setDocs(Array.isArray(data) ? data : []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání dokumentů");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchDocs(); }, []);
@@ -70,6 +74,7 @@ export default function AdminLegal() {
 
   return (
     <AdminLayout title="Právní dokumenty">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="h-24 rounded-xl bg-[#0B1220]" />)}

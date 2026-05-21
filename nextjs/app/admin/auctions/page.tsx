@@ -31,6 +31,7 @@ export default function AdminAuctions() {
   const { t } = useTranslation();
   const [auctions, setAuctions] = useState<AdminAuction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,12 +39,15 @@ export default function AdminAuctions() {
 
   const fetchAuctions = (p: number = page) => {
     setLoading(true);
+    setError(null);
     adminApi.listAuctions(p, 50).then((response: any) => {
       const result = response.data ? response.data : response;
       setAuctions(Array.isArray(result) ? result : result.data || []);
       setTotalPages(result.totalPages || 1);
       setTotal(result.total || 0);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání aukcí");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchAuctions(page); }, [page]);
@@ -77,6 +81,7 @@ export default function AdminAuctions() {
 
   return (
     <AdminLayout title={t("admin.auctions")}>
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="mb-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />

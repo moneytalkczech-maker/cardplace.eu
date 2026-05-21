@@ -26,9 +26,13 @@ interface SystemInfo {
 export default function AdminSystem() {
   const [info, setInfo] = useState<SystemInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    adminApi.getSystemInfo().then(setInfo).catch(() => {}).finally(() => setLoading(false));
+    setError(null);
+    adminApi.getSystemInfo().then(setInfo).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání systémových informací");
+    }).finally(() => setLoading(false));
   }, []);
 
   const formatUptime = (seconds: number) => {
@@ -47,6 +51,14 @@ export default function AdminSystem() {
           <div className="h-32 rounded-xl bg-[#0B1220]" />
           <div className="h-48 rounded-xl bg-[#0B1220]" />
         </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Systém">
+        <div className="text-red-400 text-sm py-4 text-center">{error}</div>
       </AdminLayout>
     );
   }

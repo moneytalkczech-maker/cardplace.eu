@@ -8,9 +8,13 @@ import AdminLayout from "@/components/layout/AdminLayout";
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    adminApi.getStats().then(setStats).catch(() => {}).finally(() => setLoading(false));
+    setError(null);
+    adminApi.getStats().then(setStats).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání statistik");
+    }).finally(() => setLoading(false));
   }, []);
 
   const cards = [
@@ -23,6 +27,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout title="Přehled">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map((i) => <div key={i} className="animate-pulse h-28 rounded-xl bg-[#0B1220]" />)}

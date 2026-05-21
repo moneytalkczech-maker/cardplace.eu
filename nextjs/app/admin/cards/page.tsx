@@ -25,6 +25,7 @@ const STATUS_OPTIONS = ["active", "archived", "hidden"];
 export default function AdminCards() {
   const [cards, setCards] = useState<AdminCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -32,11 +33,14 @@ export default function AdminCards() {
 
   const fetchCards = (p: number = page, s: string = search) => {
     setLoading(true);
+    setError(null);
     adminApi.listCards(p, 50, s || undefined).then((response: any) => {
       setCards(response.data || []);
       setTotalPages(response.totalPages || 1);
       setTotal(response.total || 0);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err: any) => {
+      setError(err.response?.data?.error || "Chyba při načítání karet");
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchCards(page, search); }, [page]);
@@ -66,6 +70,7 @@ export default function AdminCards() {
 
   return (
     <AdminLayout title="Karty">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       <div className="mb-6 flex gap-3">
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />

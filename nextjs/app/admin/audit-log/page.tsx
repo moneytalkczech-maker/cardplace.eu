@@ -33,12 +33,14 @@ function formatAction(action: string): string {
 export default function AdminAuditLog() {
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     api.get("/admin/audit-log", { params: { page, limit: 30 } })
       .then((r) => r.data)
       .then((response: any) => {
@@ -47,12 +49,15 @@ export default function AdminAuditLog() {
         setTotalPages(result.totalPages || 1);
         setTotal(result.total || 0);
       })
-      .catch(() => {})
+      .catch((err: any) => {
+        setError(err.response?.data?.error || "Chyba při načítání audit logu");
+      })
       .finally(() => setLoading(false));
   }, [page]);
 
   return (
     <AdminLayout title="Audit Log">
+      {error && <div className="text-red-400 text-sm py-4 text-center">{error}</div>}
       {loading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
