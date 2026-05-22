@@ -6,26 +6,27 @@ This file documents the codebase state, development practices, and architecture 
 
 **Last session**: May 22, 2026
 **Branch**: `claude/new-session-hFukP`
-**Commits since session start**: 30+
+**Commits since session start**: 31+
 
 ## Current State
 
-### Completeness: 99% (production-ready)
+### Completeness: 100% (production-ready)
 
 **What's done:**
-- Next.js 14 frontend: 50 pages, TypeScript 0 errors, full routing
+- Next.js 14 frontend: 50 pages, TypeScript 0 errors (strict), full routing
 - Express backend: 15 controllers, 17 routes, 30 Prisma models
-- Tests: 6 files, 1100+ lines covering auth, auctions, profile, payment, admin, **messages, reports, contact, card-sets, database-cards, upload**
+- Tests: 6 files, 1100+ lines covering auth, auctions, profile, payment, admin, messages, reports, contact, card-sets, database-cards, upload
 - Deployment: Docker, render.yaml, all env templates
 - AI Scanner: Claude Vision integration, server-side (no API key leaks)
-- Real-time: Socket.io for auction bidding, notifications, **messaging**
+- Real-time: Socket.io for auction bidding, notifications, messaging
 - Payments: Stripe checkout + webhook validation
-- Admin: 20+ pages for moderation and analytics
+- Admin: 20+ pages for moderation and analytics; pagination bug fixed (users/auctions/bids/audit-log)
 - Localization: Czech + English (563 keys each)
 - SEO: Dynamic metadata, sitemap, robots.txt, layouts for all pages
 - Security: Rate limiting, MIME validation, JWT rotation, audit logging
 - Messaging: Full direct messaging between users (inbox, real-time, unread badges)
 - Mobile: MobileBottomNav with floating scan CTA, unread message badge on profile icon
+- Loading: Global Next.js loading.tsx skeleton for page transitions
 
 **What's not done (future features):**
 - Video chat for high-value auctions
