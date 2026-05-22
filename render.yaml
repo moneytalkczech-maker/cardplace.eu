@@ -51,6 +51,22 @@ services:
         value: "23.2"
       - key: GBP_TO_CZK
         value: "29.5"
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
 
   # ─── Frontend (Next.js 14 App Router) ────────────────────────
   - type: web
@@ -71,6 +87,12 @@ services:
         value: /api
       - key: NEXT_PUBLIC_SOCKET_URL
         value: https://cardplace-api.onrender.com
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_BASE_URL
+        value: https://cardplace.eu
+      - key: SENTRY_DSN
+        sync: false
 
 databases:
   # ─── PostgreSQL (Render Managed) ──────────────────────────
