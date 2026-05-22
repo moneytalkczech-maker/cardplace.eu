@@ -293,6 +293,9 @@ const cs: Record<string, string> = {
   "profile.loadWatchlistError": "Nepodařilo se načíst hlídací seznam",
   "profile.loadReferralError": "Nepodařilo se načíst referenční kód",
   "profile.loadPricesError": "Nepodařilo se načíst ceny",
+  "profile.collection": "Sbírka karet",
+  "profile.uniqueCards": "unikátních",
+  "profile.totalCardsShort": "ks celkem",
 
   // Settings
   "settings.title": "Nastavení profilu",
@@ -474,6 +477,7 @@ const cs: Record<string, string> = {
   "wanted.loadError": "Nepodařilo se načíst poptávky",
   "wanted.createError": "Nepodařilo se vytvořit poptávku",
   "wanted.deleteError": "Nepodařilo se smazat",
+  "wanted.addToCollection": "Mám tuto kartu",
 
   // Collection
   "collection.title": "Moje sbírka",

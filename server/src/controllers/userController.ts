@@ -6,22 +6,35 @@ import { calculateFee } from "../utils/fees";
 import { AppError } from "../middleware/errorHandler";
 
 export async function getProfile(req: AuthRequest, res: Response) {
-  const user = await prisma.user.findUnique({
-    where: { id: req.params.id as string },
-    select: {
-      id: true, username: true, avatarUrl: true, trustScore: true,
-      verified: true, totalSales: true, createdAt: true,
-      _count: { select: { auctions: true, bids: true } },
-    },
-  }) as any;
+  const userId = req.params.id as string;
+  const [user, collectionItems] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, username: true, avatarUrl: true, trustScore: true,
+        verified: true, totalSales: true, createdAt: true,
+        _count: { select: { auctions: true, bids: true } },
+      },
+    }) as any,
+    prisma.collectionItem.findMany({
+      where: { userId },
+      select: { quantity: true, marketValue: true, purchasePrice: true },
+    }),
+  ]);
   if (!user) throw new AppError(404, "User not found");
   const rank = calculateRank(user.trustScore, user.totalSales);
+  const collectionValue = collectionItems.reduce(
+    (sum: number, i: any) => sum + ((i.marketValue ?? i.purchasePrice ?? 0) * i.quantity), 0
+  );
   res.json({
     id: user.id, username: user.username, avatarUrl: user.avatarUrl,
     trustScore: user.trustScore, verified: user.verified,
     totalSales: user.totalSales, createdAt: user.createdAt,
     auctionCount: user._count.auctions, bidCount: user._count.bids,
     rank: rank.rank, rankLabel: rank.label,
+    collectionUniqueCards: collectionItems.length,
+    collectionTotalCards: collectionItems.reduce((s: number, i: any) => s + i.quantity, 0),
+    collectionValue: Math.round(collectionValue),
   });
 }
 

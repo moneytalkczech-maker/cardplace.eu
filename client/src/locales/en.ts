@@ -293,6 +293,9 @@ const en: Record<string, string> = {
   "profile.loadWatchlistError": "Failed to load watchlist",
   "profile.loadReferralError": "Failed to load referral code",
   "profile.loadPricesError": "Failed to load prices",
+  "profile.collection": "Card collection",
+  "profile.uniqueCards": "unique",
+  "profile.totalCardsShort": "total",
 
   // Settings
   "settings.title": "Profile settings",
@@ -474,6 +477,7 @@ const en: Record<string, string> = {
   "wanted.loadError": "Failed to load wanted cards",
   "wanted.createError": "Failed to create wanted card",
   "wanted.deleteError": "Failed to delete",
+  "wanted.addToCollection": "I have this card",
 
   // Collection
   "collection.title": "My collection",

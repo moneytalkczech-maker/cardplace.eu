@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import {
   Package, Heart, Gift, Copy, Check, LogOut, Trophy, ShieldCheck,
   Settings, UserPlus, UserCheck, CreditCard, Gavel, Star, Zap, Crown, Sparkles,
-  MessageSquare,
+  MessageSquare, BookOpen,
 } from "lucide-react";
 import { users, auth as authApi, followApi } from "../services/api";
 import { payments } from "../services/payments";
@@ -202,6 +202,31 @@ export default function Profile() {
             </div>
           ))}
         </div>
+
+        {/* Collection stats */}
+        {((p as any)?.collectionTotalCards > 0 || isMe) && (
+          <Link
+            to={`/collection/${p?.id}`}
+            className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl border border-[rgba(0,200,255,0.12)] bg-[rgba(0,200,255,0.04)] hover:border-[rgba(0,200,255,0.3)] hover:bg-[rgba(0,200,255,0.08)] transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-5 w-5 text-[#00C8FF]" />
+              <div>
+                <p className="text-sm font-heading font-bold text-white group-hover:text-[#00C8FF] transition-colors">
+                  {t("profile.collection")}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {(p as any)?.collectionUniqueCards ?? 0} {t("profile.uniqueCards")} · {(p as any)?.collectionTotalCards ?? 0} {t("profile.totalCardsShort")}
+                </p>
+              </div>
+            </div>
+            {(p as any)?.collectionValue > 0 && (
+              <span className="text-[#A7FF00] font-heading font-bold text-sm">
+                {(p as any).collectionValue.toLocaleString("cs-CZ")} Kč
+              </span>
+            )}
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}
