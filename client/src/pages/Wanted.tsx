@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Plus, X, Target, Gavel, Loader2, ChevronDown } from "lucide-react";
+import { Search, Plus, X, Target, Gavel, Loader2, ChevronDown, PackagePlus } from "lucide-react";
 import { wantedApi } from "../services/api";
 import { useAuthStore } from "../store/authStore";
 import { toast } from "../components/Toast";
 import { useTranslation } from "../hooks/useTranslation";
 import { searchCards } from "../lib/CardsDB";
 import type { MarketCard } from "../lib/CardsDB";
+import QuickAddModal, { type QuickAddCard } from "../components/QuickAddModal";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -24,8 +25,9 @@ interface WantedItem {
 
 export default function Wanted() {
   const { t } = useTranslation();
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [wanted, setWanted] = useState<WantedItem[]>([]);
+  const [addToCollectionCard, setAddToCollectionCard] = useState<QuickAddCard | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showForm, setShowForm] = useState(false);
   const [cardSearch, setCardSearch] = useState("");
@@ -169,13 +171,26 @@ export default function Wanted() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
                   {w.status === "ACTIVE" && (
                     <>
+                      {user && w.user.id === user.id && (
+                        <button
+                          onClick={() => setAddToCollectionCard({
+                            id: w.cardId,
+                            name: w.cardName,
+                            setName: w.cardSet,
+                            estimatedPrice: w.maxPrice ?? undefined,
+                          })}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(167,255,0,0.1)] border border-[rgba(167,255,0,0.25)] text-[#A7FF00] text-xs font-heading font-bold hover:bg-[rgba(167,255,0,0.18)] transition-colors"
+                        >
+                          <PackagePlus className="h-3.5 w-3.5" /> {t("wanted.addToCollection")}
+                        </button>
+                      )}
                       <Link to={`/auctions?search=${encodeURIComponent(w.cardName)}`} className="btn-secondary text-sm font-heading">
                         <Gavel className="h-4 w-4" /> {t("wanted.offer")}
                       </Link>
-                      {token && (
+                      {token && w.user.id === user?.id && (
                         <button onClick={() => handleRemove(w.id)} className="btn-ghost text-sm">
                           <X className="h-4 w-4" />
                         </button>
@@ -201,6 +216,13 @@ export default function Wanted() {
             {t("wanted.loadMore")} ({wanted.length - visibleCount} {t("wanted.remaining")})
           </button>
         </div>
+      )}
+
+      {addToCollectionCard && (
+        <QuickAddModal
+          card={addToCollectionCard}
+          onClose={() => setAddToCollectionCard(null)}
+        />
       )}
     </div>
   );

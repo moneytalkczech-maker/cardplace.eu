@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, AlertTriangle, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, ExternalLink, AlertTriangle, Clock, TrendingUp, PackagePlus } from "lucide-react";
 import api from "../services/api";
+import { useAuthStore } from "../store/authStore";
+import QuickAddModal, { type QuickAddCard } from "../components/QuickAddModal";
 
 interface CardDetail {
   id: string; name: string; slug: string; cardNumber: string | null;
@@ -17,8 +19,10 @@ interface CardDetail {
 
 export default function CardDetailPage() {
   const { cardId } = useParams();
+  const { user } = useAuthStore();
   const [card, setCard] = useState<CardDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
     if (!cardId) return;
@@ -147,9 +151,21 @@ export default function CardDetailPage() {
             </div>
           </div>
 
+          {/* Add to collection */}
+          {user && (
+            <div className="mt-6">
+              <button
+                onClick={() => setShowAdd(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#A7FF00] text-[#050A12] font-heading font-bold text-sm hover:bg-[#c0ff3c] transition-colors"
+              >
+                <PackagePlus className="h-5 w-5" /> Přidat do sbírky
+              </button>
+            </div>
+          )}
+
           {/* Cards in same set */}
           {card.set && (
-            <div className="mt-6">
+            <div className="mt-3">
               <Link to={`/cards/sets/${card.set.slug}`}
                 className="btn-ghost text-sm font-heading w-full justify-center">
                 <ExternalLink className="h-4 w-4" /> Zobrazit všechny karty v {card.set.name}
@@ -158,6 +174,20 @@ export default function CardDetailPage() {
           )}
         </div>
       </div>
+
+      {showAdd && (
+        <QuickAddModal
+          card={{
+            id: card.id,
+            name: card.name,
+            setName: card.set.name,
+            rarity: card.rarity,
+            imageUrl: card.imageUrl,
+            estimatedPrice: card.priceCardmarketAvg ?? card.priceEbayAvg,
+          } as QuickAddCard}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
     </div>
   );
 }

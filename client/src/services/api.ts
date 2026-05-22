@@ -3,7 +3,11 @@ import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 import type { Auction, User, Bid, Transaction, Notification } from "../types";
 
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+// On native Capacitor (Android/iOS) the web proxy is not available,
+// so use the production server URL directly.
+const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.();
+const API_URL = import.meta.env.VITE_API_URL
+  || (isNative ? "https://cardplace.eu/api" : "/api");
 
 const api = axios.create({
   baseURL: API_URL,

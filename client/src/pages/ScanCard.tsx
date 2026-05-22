@@ -1,17 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Scan, X, AlertCircle, Loader2, Sparkles, Check, ArrowRight, Search, Brain } from "lucide-react";
+import {
+  Camera, Scan, X, AlertCircle, Loader2, Sparkles, Check,
+  ArrowRight, Search, Brain, BookOpen, PackagePlus, CheckCircle2,
+} from "lucide-react";
 import { useTranslation } from "../hooks/useTranslation";
 import { searchCards } from "../lib/CardsDB";
 import type { MarketCard } from "../lib/CardsDB";
+import api from "../services/api";
+import { toast } from "../components/Toast";
+import { useAuthStore } from "../store/authStore";
+import { Capacitor } from "@capacitor/core";
 
-// TF.js a Tesseract.js se načítají dynamicky pouze při použití scanu
-// Původní statické importy odstraněny pro snížení bundle size o ~14MB
+const CONDITIONS = ["NM", "LP", "MP", "HP", "PO"];
 
 export default function ScanCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [image, setImage] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<{ detected: boolean; confidence: number } | null>(null);
@@ -22,6 +30,15 @@ export default function ScanCard() {
   const [ocrText, setOcrText] = useState("");
   const [ocrConfidence, setOcrConfidence] = useState(0);
   const [autoMatched, setAutoMatched] = useState(false);
+
+  // Add to collection state
+  const [addMode, setAddMode] = useState(false);
+  const [addCondition, setAddCondition] = useState("NM");
+  const [addQuantity, setAddQuantity] = useState(1);
+  const [addPrice, setAddPrice] = useState("");
+  const [addNotes, setAddNotes] = useState("");
+  const [addingToCollection, setAddingToCollection] = useState(false);
+  const [addedToCollection, setAddedToCollection] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,8 +52,38 @@ export default function ScanCard() {
       setOcrText("");
       setOcrConfidence(0);
       setAutoMatched(false);
+      setAddMode(false);
+      setAddedToCollection(false);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleNativeCamera = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const { Camera: CapCamera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await CapCamera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        quality: 90,
+      });
+      if (photo.dataUrl) {
+        setImage(photo.dataUrl);
+        setResult(null);
+        setError("");
+        setSelectedCard(null);
+        setOcrText("");
+        setOcrConfidence(0);
+        setAutoMatched(false);
+        setAddMode(false);
+        setAddedToCollection(false);
+      }
+    } catch {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleScan = async () => {
@@ -45,9 +92,9 @@ export default function ScanCard() {
     setError("");
     setOcrText("");
     setAutoMatched(false);
+    setAddedToCollection(false);
 
     try {
-      // Dynamický import — TF.js a Tesseract.js se načtou pouze při použití
       const CardDetectionService = (await import("../services/CardDetectionService")).default;
       const OcrService = (await import("../services/OcrService")).default;
       const detector = CardDetectionService.getInstance();
@@ -57,7 +104,6 @@ export default function ScanCard() {
       img.src = image;
       await new Promise<void>((resolve) => { img.onload = () => resolve(); });
 
-      // Krok 1: YOLO detekce karty
       const det = await detector.detectCardPresence(img);
       setResult(det);
 
@@ -67,7 +113,6 @@ export default function ScanCard() {
         return;
       }
 
-      // Krok 2: OCR — přečte text z karty
       const ocrResult = await ocr.recognize(img);
       const cleaned = ocr.extractCardName(ocrResult.text);
 
@@ -75,29 +120,73 @@ export default function ScanCard() {
         setOcrText(cleaned);
         setOcrConfidence(Math.round(ocrResult.confidence));
 
-        // Krok 3: Automatické vyhledání karty v databázi
         const matches = await searchCards(cleaned);
         if (matches.length > 0) {
-          // Vyber nejlepší shodu (první výsledek)
           const best = matches[0];
           setSelectedCard(best);
           setCardSearch(best.name);
           setAutoMatched(true);
+          if (best.estimatedPrice) {
+            setAddPrice(String(best.estimatedPrice));
+          }
         } else {
-          // Nenašlo přesnou shodu — necháme uživatele dopsat
           setCardSearch(cleaned);
         }
       }
-    } catch (err) {
+    } catch {
       setError(t("scan.modelError"));
     }
     setScanning(false);
   };
 
+  const handleAddToCollection = async () => {
+    if (!selectedCard || !user) return;
+    setAddingToCollection(true);
+    try {
+      await api.post("/collection", {
+        cardId: selectedCard.id,
+        cardName: selectedCard.name,
+        cardSet: selectedCard.setName,
+        cardRarity: selectedCard.rarity,
+        cardImage: selectedCard.imageUrl,
+        quantity: addQuantity,
+        purchasePrice: addPrice ? parseFloat(addPrice) : undefined,
+        condition: addCondition,
+        notes: addNotes || undefined,
+      });
+      setAddedToCollection(true);
+      setAddMode(false);
+      toast("success", t("scan.addedToCollection"));
+    } catch {
+      toast("error", t("collection.addError"));
+    }
+    setAddingToCollection(false);
+  };
+
+  const createAuction = () => {
+    if (selectedCard) {
+      navigate(`/create?card=${selectedCard.id}&name=${encodeURIComponent(selectedCard.name)}`);
+    }
+  };
+
+  const resetAll = () => {
+    setImage(null);
+    setResult(null);
+    setError("");
+    setSelectedCard(null);
+    setOcrText("");
+    setAddMode(false);
+    setAddedToCollection(false);
+    setAddPrice("");
+    setAddNotes("");
+    setAddQuantity(1);
+    setAddCondition("NM");
+  };
+
   useEffect(() => {
-    if (cardSearch.length < 2 || autoMatched) { 
-      if (!autoMatched) setCardResults([]); 
-      return; 
+    if (cardSearch.length < 2 || autoMatched) {
+      if (!autoMatched) setCardResults([]);
+      return;
     }
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -106,12 +195,6 @@ export default function ScanCard() {
     }, 150);
     return () => { clearTimeout(timer); cancelled = true; };
   }, [cardSearch, autoMatched]);
-
-  const createAuction = () => {
-    if (selectedCard) {
-      navigate(`/create?card=${selectedCard.id}&name=${encodeURIComponent(selectedCard.name)}`);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -123,9 +206,10 @@ export default function ScanCard() {
         <p className="text-gray-500 mt-2">{t("scan.subtitle")}</p>
       </div>
 
+      {/* Upload area */}
       <div className="card mb-6">
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleNativeCamera}
           className="aspect-[4/3] rounded-lg border-2 border-dashed border-[rgba(0,200,255,0.15)] hover:border-[#00C8FF] cursor-pointer transition-colors flex items-center justify-center bg-[rgba(0,200,255,0.05)]"
         >
           {image ? (
@@ -157,7 +241,7 @@ export default function ScanCard() {
               <><Scan className="h-5 w-5" /> {t("scan.identify")}</>
             )}
           </button>
-          <button onClick={() => { setImage(null); setResult(null); setError(""); setSelectedCard(null); setOcrText(""); }} className="btn-secondary">
+          <button onClick={resetAll} className="btn-secondary">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -179,13 +263,13 @@ export default function ScanCard() {
             <div>
               <p className="font-heading font-bold text-lg">{t("scan.detected")}</p>
               <p className="text-sm text-gray-400">
-                Detekce: {result.confidence}% 
+                {t("scan.detectionLabel")}: {result.confidence}%
                 {ocrText && <> · OCR: {ocrConfidence}%</>}
               </p>
             </div>
           </div>
 
-          {/* OCR výsledek */}
+          {/* OCR result */}
           {ocrText && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] mb-3">
               <Brain className="h-4 w-4 text-[#00C8FF] flex-shrink-0" />
@@ -198,7 +282,7 @@ export default function ScanCard() {
             </div>
           )}
 
-          {/* Ruční vyhledávání (fallback nebo dolaďění) */}
+          {/* Manual search fallback */}
           {!autoMatched && (
             <>
               <p className="text-sm text-gray-500 mb-3">{t("scan.selectCard")}</p>
@@ -215,10 +299,24 @@ export default function ScanCard() {
               {cardResults.length > 0 && (
                 <div className="mb-3 rounded-lg border border-[rgba(0,200,255,0.15)] bg-[#0B1220] max-h-40 overflow-y-auto">
                   {cardResults.map((c) => (
-                    <button key={c.id} type="button" onClick={() => { setSelectedCard(c); setCardSearch(c.name); setCardResults([]); }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0">
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCard(c);
+                        setCardSearch(c.name);
+                        setCardResults([]);
+                        if (c.estimatedPrice) setAddPrice(String(c.estimatedPrice));
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0"
+                    >
                       <span className="font-medium">{c.name}</span>
                       <span className="text-gray-500 ml-2">{c.setName}</span>
+                      {c.estimatedPrice && (
+                        <span className="ml-auto float-right text-[#A7FF00] text-xs font-bold">
+                          {c.estimatedPrice.toLocaleString("cs-CZ", { maximumFractionDigits: 0 })} Kč
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -226,14 +324,132 @@ export default function ScanCard() {
             </>
           )}
 
-          {selectedCard && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)]">
-              <div>
-                <p className="font-heading font-bold">{selectedCard.name}</p>
-                <p className="text-xs text-gray-400">{selectedCard.setName}</p>
+          {/* Selected card + actions */}
+          {selectedCard && !addedToCollection && !addMode && (
+            <div className="rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] p-3">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="font-heading font-bold">{selectedCard.name}</p>
+                  <p className="text-xs text-gray-400">{selectedCard.setName}</p>
+                  {selectedCard.rarity && (
+                    <span className="badge-blue mt-1 inline-block">{selectedCard.rarity}</span>
+                  )}
+                </div>
+                {selectedCard.imageUrl && (
+                  <img
+                    src={selectedCard.imageUrl}
+                    alt={selectedCard.name}
+                    className="w-12 h-16 object-contain rounded"
+                  />
+                )}
               </div>
-              <button onClick={createAuction} className="btn-primary text-sm font-heading">
-                {t("scan.createAuction")} <ArrowRight className="h-4 w-4" />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setAddMode(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#A7FF00] text-[#050A12] font-heading font-bold text-sm hover:bg-[#c0ff3c] transition-colors"
+                >
+                  <PackagePlus className="h-4 w-4" />
+                  {t("scan.addToCollection")}
+                </button>
+                <button
+                  onClick={createAuction}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[rgba(0,200,255,0.3)] text-[#00C8FF] font-heading font-bold text-sm hover:bg-[rgba(0,200,255,0.08)] transition-colors"
+                >
+                  {t("scan.createAuction")}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Add to collection form */}
+          {addMode && selectedCard && (
+            <div className="rounded-lg bg-[rgba(167,255,0,0.05)] border border-[rgba(167,255,0,0.2)] p-4">
+              <h3 className="font-heading font-bold text-sm text-[#A7FF00] mb-3 flex items-center gap-2">
+                <PackagePlus className="h-4 w-4" />
+                {t("scan.addToCollection")}
+              </h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">{t("scan.conditionLabel")}</label>
+                  <select
+                    className="input text-sm"
+                    value={addCondition}
+                    onChange={(e) => setAddCondition(e.target.value)}
+                  >
+                    {CONDITIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">{t("collection.quantity")}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="input text-sm"
+                    value={addQuantity}
+                    onChange={(e) => setAddQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  />
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 mb-1">{t("collection.purchasePrice")} (Kč)</label>
+                <input
+                  type="number"
+                  className="input text-sm"
+                  placeholder="0"
+                  value={addPrice}
+                  onChange={(e) => setAddPrice(e.target.value)}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-xs text-gray-500 mb-1">{t("collection.notes")}</label>
+                <input
+                  type="text"
+                  className="input text-sm"
+                  placeholder={t("collection.notesPlaceholder")}
+                  value={addNotes}
+                  onChange={(e) => setAddNotes(e.target.value)}
+                  maxLength={200}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddToCollection}
+                  disabled={addingToCollection}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#A7FF00] text-[#050A12] font-heading font-bold text-sm hover:bg-[#c0ff3c] disabled:opacity-50 transition-colors"
+                >
+                  {addingToCollection ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> {t("scan.addingToCollection")}</>
+                  ) : (
+                    <><PackagePlus className="h-4 w-4" /> {t("collection.addToCollection")}</>
+                  )}
+                </button>
+                <button
+                  onClick={() => setAddMode(false)}
+                  className="px-3 py-2.5 rounded-xl border border-[rgba(0,200,255,0.2)] text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Success state */}
+          {addedToCollection && (
+            <div className="rounded-lg bg-[rgba(167,255,0,0.08)] border border-[rgba(167,255,0,0.3)] p-4 flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-[#A7FF00] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-heading font-bold text-sm text-[#A7FF00]">{t("scan.addedToCollection")}</p>
+                <p className="text-xs text-gray-400">{selectedCard.name}</p>
+              </div>
+              <button
+                onClick={() => navigate("/collection")}
+                className="flex items-center gap-1 text-xs text-[#00C8FF] hover:underline"
+              >
+                <BookOpen className="h-3 w-3" />
+                {t("scan.viewCollection")}
               </button>
             </div>
           )}
