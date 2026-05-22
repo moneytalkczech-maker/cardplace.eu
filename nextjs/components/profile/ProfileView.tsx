@@ -66,7 +66,9 @@ export default function ProfileView({ userId }: Props) {
       payments.getReviews(id).then((data: Review[]) => {
         setReviews(data);
         if (data.length > 0) setAvgRating(data.reduce((s, r) => s + r.rating, 0) / data.length);
-      }).catch(() => {}).finally(() => setReviewsLoading(false));
+      }).catch(() => {
+        // reviews are supplementary — don't block profile render on failure
+      }).finally(() => setReviewsLoading(false));
     };
 
     if (userId && userId !== me?.id) {
@@ -75,8 +77,8 @@ export default function ProfileView({ userId }: Props) {
       loadReviews(pid);
     } else if (token) {
       authApi.me().then((u) => { setProfile(u); }).catch(() => toast("error", "Nepodařilo se načíst profil")).finally(() => setLoading(false));
-      users.getMyAuctions().then(setMyAuctions).catch(() => {});
-      users.getMyBids().then(setMyBids).catch(() => {});
+      users.getMyAuctions().then(setMyAuctions).catch(() => toast("error", "Nepodařilo se načíst aukce"));
+      users.getMyBids().then(setMyBids).catch(() => toast("error", "Nepodařilo se načíst příhozy"));
       users.getWatchlist().then((data: any) => setWatchlist(data.data || data || [])).catch(() => {});
       authApi.getReferralCode().then((r) => setReferralCode(r.code)).catch(() => {});
       monetizationApi.getPrices().then(setPrices).catch(() => {});

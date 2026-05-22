@@ -3,6 +3,7 @@ import "./globals.css";
 import "@/sentry.config";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import Providers from "@/components/providers/Providers";
 import ToastContainer from "@/components/ui/Toast";
 import CookieConsent from "@/components/ui/CookieConsent";
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <MobileBottomNav />
           <ToastContainer />
           <CookieConsent />
         </Providers>

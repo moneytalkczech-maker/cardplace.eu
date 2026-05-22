@@ -104,7 +104,7 @@ function MessagesContent() {
       });
       setActiveId(convo.id);
       if (isMobile) setShowThread(true);
-    }).catch(() => {});
+    }).catch(() => toast("error", "Nepodařilo se otevřít konverzaci"));
   }, [searchParams, token, user?.id, isMobile]);
 
   useEffect(() => {

@@ -18,11 +18,15 @@ const CATEGORY_NAMES: Record<string, string> = {
 export default function CardDatabasePage() {
   const [sets, setSets] = useState<CardSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
   useEffect(() => {
-    api.get("/card-sets").then((r) => setSets(r.data)).catch(() => {}).finally(() => setLoading(false));
+    setError(null);
+    api.get("/card-sets").then((r) => setSets(r.data)).catch((err: any) => {
+      setError(err.response?.data?.error || "Nepodařilo se načíst edice karet");
+    }).finally(() => setLoading(false));
   }, []);
 
   const filtered = sets.filter((s) => {
@@ -37,6 +41,8 @@ export default function CardDatabasePage() {
         <Database className="h-8 w-8 text-[#00C8FF]" />
         <h1 className="text-3xl font-bold font-heading">Databáze karet</h1>
       </div>
+
+      {error && <div className="text-red-400 text-sm py-4 text-center mb-4">{error}</div>}
 
       <div className="flex flex-wrap gap-3 mb-8">
         <div className="relative flex-1 min-w-[200px]">

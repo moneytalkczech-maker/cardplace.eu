@@ -23,14 +23,18 @@ export default function CardDetailClient() {
   const { cardId } = useParams<{ cardId: string }>();
   const [card, setCard] = useState<CardDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cardId) return;
-    api.get(`/database-cards/${cardId}`).then((r) => setCard(r.data)).catch(() => {}).finally(() => setLoading(false));
+    setError(null);
+    api.get(`/database-cards/${cardId}`).then((r) => setCard(r.data)).catch((err: any) => {
+      setError(err.response?.status === 404 ? "Karta nenalezena" : "Nepodařilo se načíst kartu");
+    }).finally(() => setLoading(false));
   }, [cardId]);
 
   if (loading) return <div className="mx-auto max-w-4xl px-4 py-8"><div className="animate-pulse h-96 bg-[#0B1220] rounded-xl" /></div>;
-  if (!card) return <div className="mx-auto max-w-4xl px-4 py-8"><p className="text-gray-500">Karta nenalezena</p></div>;
+  if (error || !card) return <div className="mx-auto max-w-4xl px-4 py-8"><p className="text-red-400">{error || "Karta nenalezena"}</p></div>;
 
   const hasPrices = card.priceCardmarketAvg || card.priceEbayAvg;
 
