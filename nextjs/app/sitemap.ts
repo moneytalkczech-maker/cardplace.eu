@@ -31,9 +31,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/legal/prohibited-items`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  const [auctionList, cardSetList] = await Promise.all([
+  const [auctionList, cardSetList, dbCardList] = await Promise.all([
     fetchJson<{ id: string; updatedAt?: string }>(`${EXPRESS}/api/auctions?limit=200&status=ACTIVE`),
     fetchJson<{ slug: string; updatedAt?: string }>(`${EXPRESS}/api/card-sets?limit=500`),
+    fetchJson<{ id: string; updatedAt?: string }>(`${EXPRESS}/api/database-cards?limit=1000`),
   ]);
 
   const auctionRoutes: MetadataRoute.Sitemap = auctionList.map((a) => ({
@@ -50,5 +51,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...auctionRoutes, ...cardSetRoutes];
+  const dbCardRoutes: MetadataRoute.Sitemap = dbCardList.map((c) => ({
+    url: `${BASE}/cards/card/${c.id}`,
+    lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.5,
+  }));
+
+  return [...staticRoutes, ...auctionRoutes, ...cardSetRoutes, ...dbCardRoutes];
 }

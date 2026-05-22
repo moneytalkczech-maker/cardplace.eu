@@ -158,6 +158,46 @@ describe("Auction flow", () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Validation failed|Title required/);
   });
+
+  it("POST /api/auctions/:id/bid — rejects bid below current price", async () => {
+    const res = await request(app)
+      .post(`/api/auctions/${auctionId}/bid`)
+      .set("Authorization", `Bearer ${bidToken}`)
+      .send({ amount: 1 });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it("POST /api/auctions/:id/watch — rejects unauthenticated", async () => {
+    const res = await request(app)
+      .post(`/api/auctions/${auctionId}/watch`);
+    expect(res.status).toBe(401);
+  });
+
+  it("POST /api/auctions/:id/watch — adds auction to watchlist", async () => {
+    const res = await request(app)
+      .post(`/api/auctions/${auctionId}/watch`)
+      .set("Authorization", `Bearer ${bidToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.watching).toBe(true);
+  });
+
+  it("GET /api/users/watchlist — returns watched auction", async () => {
+    const res = await request(app)
+      .get("/api/users/watchlist")
+      .set("Authorization", `Bearer ${bidToken}`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    const found = res.body.find((a: { id: string }) => a.id === auctionId);
+    expect(found).toBeDefined();
+  });
+
+  it("POST /api/auctions/:id/watch — removes auction from watchlist (toggle)", async () => {
+    const res = await request(app)
+      .post(`/api/auctions/${auctionId}/watch`)
+      .set("Authorization", `Bearer ${bidToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.watching).toBe(false);
+  });
 });
 
 describe("Zod validation edge cases", () => {
