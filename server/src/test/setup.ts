@@ -6,10 +6,13 @@ process.env.JWT_SECRET = "test-secret-key";
 process.env.REFRESH_TOKEN_SECRET = "test-refresh-secret-key";
 process.env.CORS_ORIGIN = "http://localhost:5173";
 process.env.PORT = "4001";
-// NOTE: Tests require PostgreSQL running with valid DATABASE_URL in server/.env
-// After secrets rotation, update server/.env with valid DB credentials before running tests.
+
+// DB-dependent setup only runs when DATABASE_URL is configured
+// Unit tests (mocked Prisma) skip this block automatically
+const hasDb = Boolean(process.env.DATABASE_URL);
 
 beforeAll(async () => {
+  if (!hasDb) return;
   await prisma.$connect();
   await prisma.bid.deleteMany({ where: { auction: { user: { email: { startsWith: "test@" } } } } });
   await prisma.notification.deleteMany({ where: { user: { email: { startsWith: "test@" } } } });
@@ -20,5 +23,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (!hasDb) return;
   await prisma.$disconnect();
 });
