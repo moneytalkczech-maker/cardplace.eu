@@ -6,7 +6,7 @@ This file documents the codebase state, development practices, and architecture 
 
 **Last session**: May 22, 2026
 **Branch**: `claude/new-session-hFukP`
-**Commits since session start**: 31+
+**Commits since session start**: 37+
 
 ## Current State
 
@@ -22,11 +22,14 @@ This file documents the codebase state, development practices, and architecture 
 - Payments: Stripe checkout + webhook validation
 - Admin: 20+ pages for moderation and analytics; pagination bug fixed (users/auctions/bids/audit-log)
 - Localization: Czech + English (563 keys each)
-- SEO: Dynamic metadata, sitemap, robots.txt, layouts for all pages
-- Security: Rate limiting, MIME validation, JWT rotation, audit logging
+- SEO: Dynamic metadata, sitemap (with individual card pages), robots.txt, OG image
+- Security: Rate limiting (auth/auctions/upload/scan), MIME validation, JWT rotation, audit logging, HTTP security headers
 - Messaging: Full direct messaging between users (inbox, real-time, unread badges)
 - Mobile: MobileBottomNav with floating scan CTA, unread message badge on profile icon
-- Loading: Global Next.js loading.tsx skeleton for page transitions
+- Loading: Global + section-specific loading.tsx skeletons (auctions, admin, cards)
+- PWA: Web App Manifest, auto-generated favicon + Apple icon via ImageResponse
+- Error handling: Global + section-specific error.tsx boundaries (admin, auctions)
+- Tests: 6 supertest files (100+ cases) + 3 unit/mock files (53 cases); vitest config fixed
 
 **What's not done (future features):**
 - Video chat for high-value auctions
