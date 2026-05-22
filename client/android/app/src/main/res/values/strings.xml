@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CardPlace</string>
+    <string name="title_activity_main">CardPlace</string>
+    <string name="package_name">eu.cardplace.app</string>
+    <string name="custom_url_scheme">eu.cardplace.app</string>
+</resources>

@@ -10,6 +10,7 @@ import type { MarketCard } from "../lib/CardsDB";
 import api from "../services/api";
 import { toast } from "../components/Toast";
 import { useAuthStore } from "../store/authStore";
+import { Capacitor } from "@capacitor/core";
 
 const CONDITIONS = ["NM", "LP", "MP", "HP", "PO"];
 
@@ -55,6 +56,34 @@ export default function ScanCard() {
       setAddedToCollection(false);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleNativeCamera = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const { Camera: CapCamera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await CapCamera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        quality: 90,
+      });
+      if (photo.dataUrl) {
+        setImage(photo.dataUrl);
+        setResult(null);
+        setError("");
+        setSelectedCard(null);
+        setOcrText("");
+        setOcrConfidence(0);
+        setAutoMatched(false);
+        setAddMode(false);
+        setAddedToCollection(false);
+      }
+    } catch {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleScan = async () => {
@@ -180,7 +209,7 @@ export default function ScanCard() {
       {/* Upload area */}
       <div className="card mb-6">
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleNativeCamera}
           className="aspect-[4/3] rounded-lg border-2 border-dashed border-[rgba(0,200,255,0.15)] hover:border-[#00C8FF] cursor-pointer transition-colors flex items-center justify-center bg-[rgba(0,200,255,0.05)]"
         >
           {image ? (
