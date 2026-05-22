@@ -103,6 +103,34 @@ export interface Notification {
   createdAt: string;
 }
 
+export interface AdminStats {
+  users: number;
+  auctions: number;
+  bids: number;
+  transactions: number;
+  collections: number;
+  userCount?: number;
+  auctionCount?: number;
+  completedAuctions?: number;
+  totalSales?: number;
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  reviewer: { id: string; username: string };
+  transaction: { auction: { title: string } };
+}
+
+export interface Founder {
+  id: string;
+  username: string;
+  avatarUrl?: string;
+  createdAt: string;
+}
+
 export interface Transaction {
   id: string;
   amount: number;

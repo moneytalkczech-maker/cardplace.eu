@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   Clock, Heart, Share2, ShieldCheck, Trophy,
   MessageCircle, AlertCircle, Zap, Gavel, Award, ChevronUp,
-  ZoomIn, X as XIcon, Flag, Bolt, Loader2
+  ZoomIn, X as XIcon, Flag, Bolt, Loader2, MessageSquare
 } from "lucide-react";
 import { auctions } from "@/lib/api";
 import { connectSocket, joinAuction, leaveAuction, onNewBid } from "@/lib/socket";
@@ -263,18 +263,30 @@ export default function AuctionDetailClient() {
 
           {/* Prodejce */}
           <div className="card">
-            <Link href={`/users/${auction.user.id}`} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#009DFF] to-[#00C8FF] flex items-center justify-center text-sm font-bold font-heading shadow-lg">
-                {auction.user.username?.[0]?.toUpperCase() || "?"}
-              </div>
-              <div>
-                <p className="font-heading font-bold text-white">{auction.user.username}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <RankBadge rank={auction.user?.rank} />
-                  {auction.user.verified && <span className="badge-green text-[10px]"><Trophy className="h-3 w-3" /> Ověřený</span>}
+            <div className="flex items-center justify-between gap-3">
+              <Link href={`/users/${auction.user.id}`} className="flex items-center gap-3 min-w-0">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#009DFF] to-[#00C8FF] flex items-center justify-center text-sm font-bold font-heading shadow-lg">
+                  {auction.user.username?.[0]?.toUpperCase() || "?"}
                 </div>
-              </div>
-            </Link>
+                <div className="min-w-0">
+                  <p className="font-heading font-bold text-white truncate">{auction.user.username}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <RankBadge rank={auction.user?.rank} />
+                    {auction.user.verified && <span className="badge-green text-[10px]"><Trophy className="h-3 w-3" /> Ověřený</span>}
+                  </div>
+                </div>
+              </Link>
+              {token && user?.id !== auction.user.id && (
+                <Link
+                  href={`/messages?with=${auction.user.id}`}
+                  className="flex-shrink-0 btn-ghost text-xs font-heading flex items-center gap-1.5 px-3 py-1.5"
+                  title="Napsat prodejci"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Zpráva</span>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Popis */}

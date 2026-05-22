@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, ShoppingBag, Gavel, CreditCard, Layers, TrendingUp, Activity } from "lucide-react";
 import { adminApi } from "@/lib/api";
+import type { AdminStats } from "@/types";
 import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +78,7 @@ export default function AdminDashboard() {
                 {[
                   ["Celkem uživatelů", stats?.users ?? 0],
                   ["Aktivních aukcí", stats?.auctions ?? 0],
-                  ["Průměr příhozů/aukci", stats?.auctions > 0 ? ((stats?.bids ?? 0) / stats.auctions).toFixed(1) : "0"],
+                  ["Průměr příhozů/aukci", (stats?.auctions ?? 0) > 0 ? (((stats?.bids ?? 0) / (stats?.auctions ?? 1)).toFixed(1)) : "0"],
                   ["Dokončených transakcí", stats?.transactions ?? 0],
                 ].map(([label, value]) => (
                   <div key={String(label)} className="flex justify-between py-2.5">

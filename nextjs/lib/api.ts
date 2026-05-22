@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
-import type { Auction, User, Bid, Transaction, Notification } from "@/types";
+import type { Auction, User, Bid, Transaction, Notification, Review, Founder } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -187,7 +187,7 @@ export const payments = {
   getConfig: () => apiGet<Record<string, unknown>>("/payments/config"),
   submitReview: (transactionId: string, rating: number, comment?: string) =>
     apiPost<{ success: boolean }>("/payments/review", { transactionId, rating, comment }),
-  getReviews: (userId: string) => apiGet<any[]>(`/payments/reviews/${userId}`),
+  getReviews: (userId: string) => apiGet<Review[]>(`/payments/reviews/${userId}`),
 };
 
 export const monetizationApi = {
@@ -196,7 +196,7 @@ export const monetizationApi = {
   createVerifiedCheckout: () => apiPost<{ url: string }>("/monetization/verified/create-checkout"),
   createBoostCheckout: (auctionId: string, boostType: string) =>
     apiPost<{ url: string }>("/monetization/boost/create-checkout", { auctionId, boostType }),
-  getFounders: () => apiGet<any[]>("/monetization/founders"),
+  getFounders: () => apiGet<Founder[]>("/monetization/founders"),
 };
 
 export default api;

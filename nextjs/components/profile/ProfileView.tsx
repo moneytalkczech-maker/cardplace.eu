@@ -9,7 +9,7 @@ import {
   Sparkles, MessageSquare, Loader2,
 } from "lucide-react";
 import { users, auth as authApi, followApi, payments, monetizationApi } from "@/lib/api";
-import type { Auction, Bid, User } from "@/types";
+import type { Auction, Bid, User, Review } from "@/types";
 
 interface SimplePrices {
   vipMonthly: number;
@@ -22,15 +22,6 @@ import { toast } from "@/components/ui/Toast";
 import RankBadge from "@/components/ui/RankBadge";
 
 type Tab = "auctions" | "bids" | "watchlist" | "reviews" | "referral" | "settings";
-
-interface Review {
-  id: string;
-  rating: number;
-  comment: string | null;
-  createdAt: string;
-  reviewer: { id: string; username: string };
-  transaction: { auction: { title: string } };
-}
 
 interface Props {
   userId?: string;
