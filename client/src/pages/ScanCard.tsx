@@ -97,6 +97,9 @@ export default function ScanCard() {
           setSelectedCard(best);
           setCardSearch(best.name);
           setAutoMatched(true);
+          if (best.estimatedPrice) {
+            setAddPrice(String(best.estimatedPrice));
+          }
         } else {
           setCardSearch(cleaned);
         }
@@ -270,11 +273,21 @@ export default function ScanCard() {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => { setSelectedCard(c); setCardSearch(c.name); setCardResults([]); }}
+                      onClick={() => {
+                        setSelectedCard(c);
+                        setCardSearch(c.name);
+                        setCardResults([]);
+                        if (c.estimatedPrice) setAddPrice(String(c.estimatedPrice));
+                      }}
                       className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0"
                     >
                       <span className="font-medium">{c.name}</span>
                       <span className="text-gray-500 ml-2">{c.setName}</span>
+                      {c.estimatedPrice && (
+                        <span className="ml-auto float-right text-[#A7FF00] text-xs font-bold">
+                          {c.estimatedPrice.toLocaleString("cs-CZ", { maximumFractionDigits: 0 })} Kč
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>

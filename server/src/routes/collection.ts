@@ -12,6 +12,7 @@ router.get("/:userId/snapshots", asyncHandler(collectionController.getValueSnaps
 router.get("/:userId/export/csv", asyncHandler(collectionController.exportCsv));
 router.get("/:userId/export/json", asyncHandler(collectionController.exportJson));
 router.post("/", authenticate, validateBody(addToCollectionSchema), asyncHandler(collectionController.addItem));
+router.post("/refresh-prices", authenticate, asyncHandler(collectionController.refreshPrices));
 router.patch("/:id", authenticate, validateBody(updateCollectionItemSchema), asyncHandler(collectionController.updateItem));
 router.delete("/:id", authenticate, asyncHandler(collectionController.removeItem));
 

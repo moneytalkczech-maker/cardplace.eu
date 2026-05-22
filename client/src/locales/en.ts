@@ -521,6 +521,10 @@ const en: Record<string, string> = {
   "collection.marketValuePh": "Market price (CZK)",
   "collection.breakdown": "Breakdown",
   "collection.history": "Value history",
+  "collection.refreshPrices": "Refresh prices",
+  "collection.pricesRefreshed": "Cards updated",
+  "collection.pricesUpToDate": "Prices are up to date",
+  "collection.refreshError": "Failed to refresh prices",
 
   // ForgotPassword
   "forgot.emailSent": "Email sent",

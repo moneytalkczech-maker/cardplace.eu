@@ -521,6 +521,10 @@ const cs: Record<string, string> = {
   "collection.marketValuePh": "Tržní cena (Kč)",
   "collection.breakdown": "Rozložení",
   "collection.history": "Vývoj hodnoty",
+  "collection.refreshPrices": "Aktualizovat ceny",
+  "collection.pricesRefreshed": "Aktualizováno karet",
+  "collection.pricesUpToDate": "Ceny jsou aktuální",
+  "collection.refreshError": "Nepodařilo se aktualizovat ceny",
 
   // ForgotPassword
   "forgot.emailSent": "Email byl odeslán",

@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   Plus, Trash2, Minus, Plus as PlusIcon, BookOpen, Loader2, ChevronDown,
   Camera, Download, Search, Filter, TrendingUp, TrendingDown, BarChart2,
-  Package, Pencil, X, Check,
+  Package, Pencil, X, Check, RefreshCw,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { searchCards, type MarketCard } from "../lib/CardsDB";
@@ -108,6 +108,8 @@ export default function Collection() {
   const [chartGroupBy, setChartGroupBy] = useState<"rarity" | "set">("rarity");
   const [chartView, setChartView] = useState<"breakdown" | "history">("breakdown");
   const [showChart, setShowChart] = useState(true);
+
+  const [refreshingPrices, setRefreshingPrices] = useState(false);
 
   // Inline edit
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -218,6 +220,24 @@ export default function Collection() {
     }
   };
 
+  const handleRefreshPrices = async () => {
+    if (!token) return;
+    setRefreshingPrices(true);
+    try {
+      const res = await api.post("/collection/refresh-prices");
+      const { updated } = res.data;
+      if (updated > 0) {
+        refetch();
+        toast("success", `${t("collection.pricesRefreshed")}: ${updated}`);
+      } else {
+        toast("success", t("collection.pricesUpToDate"));
+      }
+    } catch {
+      toast("error", t("collection.refreshError"));
+    }
+    setRefreshingPrices(false);
+  };
+
   const filteredItems = useMemo(() => {
     let result = [...items];
 
@@ -281,6 +301,15 @@ export default function Collection() {
                 <Camera className="h-4 w-4" />
                 {t("collection.scan")}
               </Link>
+              <button
+                onClick={handleRefreshPrices}
+                disabled={refreshingPrices || items.length === 0}
+                title={t("collection.refreshPrices")}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(0,200,255,0.15)] text-gray-400 hover:text-[#A7FF00] hover:border-[rgba(167,255,0,0.3)] font-heading font-bold text-sm disabled:opacity-40 transition-all"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshingPrices ? "animate-spin" : ""}`} />
+                {t("collection.refreshPrices")}
+              </button>
               <div className="relative group">
                 <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(0,200,255,0.15)] text-gray-400 hover:text-white font-heading font-bold text-sm hover:border-[rgba(0,200,255,0.3)] transition-all">
                   <Download className="h-4 w-4" />
@@ -416,18 +445,35 @@ export default function Collection() {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => { setSelectedCard(c); setCardSearch(c.name); setCardResults([]); }}
+                      onClick={() => {
+                        setSelectedCard(c);
+                        setCardSearch(c.name);
+                        setCardResults([]);
+                        if (c.estimatedPrice && !marketValueAdd) {
+                          setMarketValueAdd(String(c.estimatedPrice));
+                        }
+                      }}
                       className="w-full text-left px-4 py-2 text-sm hover:bg-[rgba(0,200,255,0.06)] border-b border-[rgba(0,200,255,0.06)] last:border-0"
                     >
                       <span className="font-medium">{c.name}</span>
                       <span className="text-gray-500 ml-2">{c.setName}</span>
+                      {c.estimatedPrice && (
+                        <span className="ml-auto float-right text-[#A7FF00] text-xs font-bold">
+                          {c.estimatedPrice.toLocaleString("cs-CZ", { maximumFractionDigits: 0 })} Kč
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
               {selectedCard && (
-                <div className="mt-2 px-3 py-2 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] text-sm">
-                  {selectedCard.name} <span className="text-gray-500">({selectedCard.setName})</span>
+                <div className="mt-2 px-3 py-2 rounded-lg bg-[rgba(0,200,255,0.06)] border border-[rgba(0,200,255,0.1)] text-sm flex items-center justify-between">
+                  <span>{selectedCard.name} <span className="text-gray-500">({selectedCard.setName})</span></span>
+                  {selectedCard.estimatedPrice && (
+                    <span className="text-[#A7FF00] text-xs font-bold ml-3 flex-shrink-0">
+                      ~{selectedCard.estimatedPrice.toLocaleString("cs-CZ", { maximumFractionDigits: 0 })} Kč
+                    </span>
+                  )}
                 </div>
               )}
             </div>

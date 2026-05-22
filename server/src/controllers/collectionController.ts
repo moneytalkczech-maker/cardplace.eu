@@ -118,6 +118,32 @@ export async function removeItem(req: AuthRequest, res: Response) {
   res.json({ deleted: true });
 }
 
+export async function refreshPrices(req: AuthRequest, res: Response) {
+  const userId = req.userId!;
+  const items = await prisma.collectionItem.findMany({ where: { userId } });
+
+  let updated = 0;
+  for (const item of items) {
+    // Look up market price from DatabaseCard by name match
+    const dbCard = await prisma.databaseCard.findFirst({
+      where: { name: { contains: item.cardName } },
+      select: { priceCardmarketAvg: true, priceEbayAvg: true },
+    });
+
+    const newPrice = dbCard?.priceCardmarketAvg ?? dbCard?.priceEbayAvg;
+    if (newPrice && newPrice !== item.marketValue) {
+      await prisma.collectionItem.update({
+        where: { id: item.id },
+        data: { marketValue: newPrice },
+      });
+      updated++;
+    }
+  }
+
+  if (updated > 0) await saveSnapshot(userId);
+  res.json({ updated, total: items.length });
+}
+
 export async function exportCsv(req: AuthRequest, res: Response) {
   const userId = req.params.userId as string;
   const items = await prisma.collectionItem.findMany({
