@@ -4,32 +4,36 @@ This file documents the codebase state, development practices, and architecture 
 
 ## Session Context
 
-**Last session**: May 21, 2026
+**Last session**: May 22, 2026
 **Branch**: `claude/new-session-hFukP`
-**Commits since session start**: 22
+**Commits since session start**: 30+
 
 ## Current State
 
-### Completeness: 95% (MVP-ready)
+### Completeness: 99% (production-ready)
 
 **What's done:**
-- Next.js 14 frontend: 49 pages, TypeScript 0 errors, full routing
+- Next.js 14 frontend: 50 pages, TypeScript 0 errors, full routing
 - Express backend: 15 controllers, 17 routes, 30 Prisma models
-- Tests: 3 files, 550+ lines covering auth, auctions, profile, payment, admin
+- Tests: 6 files, 1100+ lines covering auth, auctions, profile, payment, admin, **messages, reports, contact, card-sets, database-cards, upload**
 - Deployment: Docker, render.yaml, all env templates
 - AI Scanner: Claude Vision integration, server-side (no API key leaks)
-- Real-time: Socket.io for auction bidding, notifications
+- Real-time: Socket.io for auction bidding, notifications, **messaging**
 - Payments: Stripe checkout + webhook validation
 - Admin: 20+ pages for moderation and analytics
 - Localization: Czech + English (563 keys each)
-- SEO: Dynamic metadata, sitemap, robots.txt
+- SEO: Dynamic metadata, sitemap, robots.txt, layouts for all pages
 - Security: Rate limiting, MIME validation, JWT rotation, audit logging
+- Messaging: Full direct messaging between users (inbox, real-time, unread badges)
+- Mobile: MobileBottomNav with floating scan CTA, unread message badge on profile icon
 
-**What's partially done (non-critical):**
-- Messaging system between users (not started — low priority)
-- Video chat for high-value auctions (not started)
-- Advanced analytics dashboard (basic stats exist)
-- Email template builder in UI (hardcoded in DB)
+**What's not done (future features):**
+- Video chat for high-value auctions
+- AI moderation — auto-flag suspicious auctions
+- Mobile app (React Native)
+- Payment alternatives (Apple Pay, PayPal)
+- Email template builder UI (hardcoded in DB)
+- OAuth tests (Google OAuth requires external provider, not unit-testable)
 
 ## Code Standards
 
@@ -276,12 +280,15 @@ npm run test:watch       # Watch mode
 **PR #1**: "feat: Next.js 14 App Router migration — complete" (Draft)
 
 Recent commits:
-- `98f55ab` docs: add comprehensive README
-- `f2a8223` test: add tests for payment flow and admin endpoints
-- `a3ef85a` feat: wire report modal to /api/reports
-- `0b42404` feat: add boost button for auction owner
-- `cfbd9ee` test: add comprehensive tests for profile, collection, wanted, follow
-- ...and 17 more
+- `3c29bb6` test: add upload route tests with real PNG magic bytes validation
+- `c13eabe` test: add tests for messages, reports, contact, card-sets, database-cards
+- `c4632de` refactor: consolidate api imports in authStore
+- `ac3c52d` feat: SEO metadata layouts + message requester button on wanted page
+- `17a69ee` feat: add message-seller button + complete type definitions
+- `fe005d6` feat: unread message badge + eliminate any types across frontend
+- `6a03a98` feat: mobile bottom nav + fix silent catches in main pages
+- `3b58803` fix: replace silent catch patterns in all 19 admin pages
+- ...and 22 more
 
 ## Git Workflow
 
