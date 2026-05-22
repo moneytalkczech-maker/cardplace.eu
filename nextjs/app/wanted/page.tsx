@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Plus, X, Target, Gavel, Loader2, ChevronDown } from "lucide-react";
+import { Search, Plus, X, Target, Gavel, Loader2, ChevronDown, MessageSquare } from "lucide-react";
 import { wantedApi } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/components/ui/Toast";
@@ -22,7 +22,7 @@ interface WantedItem {
 }
 
 export default function WantedPage() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [wanted, setWanted] = useState<WantedItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [showForm, setShowForm] = useState(false);
@@ -189,7 +189,16 @@ export default function WantedPage() {
                       >
                         <Gavel className="h-4 w-4" /> Nabídnout
                       </Link>
-                      {token && (
+                      {token && w.user.id !== user?.id && (
+                        <Link
+                          href={`/messages?with=${w.user.id}`}
+                          className="btn-ghost text-sm p-2"
+                          title="Napsat uživateli"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Link>
+                      )}
+                      {token && w.user.id === user?.id && (
                         <button onClick={() => handleRemove(w.id)} className="btn-ghost text-sm p-2">
                           <X className="h-4 w-4" />
                         </button>
