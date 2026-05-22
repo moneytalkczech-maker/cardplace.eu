@@ -1,5 +1,7 @@
 node_modules/
 dist/
+nextjs/.next/
+nextjs/.env.local
 dev.db
 *.db
 logs/
