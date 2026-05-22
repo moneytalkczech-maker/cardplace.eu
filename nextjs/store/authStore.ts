@@ -134,8 +134,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   fetchUnreadMessages: async () => {
     try {
-      const data = await api.get("/messages/unread").then((r) => r.data as { count: number });
-      set({ unreadMessages: data.count ?? 0 });
+      const data = await api.get("/messages/unread").then((r) => r.data as { unread: number });
+      set({ unreadMessages: data.unread ?? 0 });
     } catch { /* ignore — non-critical */ }
   },
 }));
