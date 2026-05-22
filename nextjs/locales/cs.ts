@@ -26,7 +26,7 @@ const cs: Record<string, string> = {
   "footer.auctionRules": "Pravidla aukcí",
   "footer.prohibited": "Zakázané položky",
   "footer.contact": "Kontakt",
-  "footer.contactEmail": "info@cardplace.eu",
+  "footer.contactEmail": "info@cardportal.eu",
   "footer.address": "Jizerská 5, 463 62 Hejnice",
   "footer.rights": "Všechna práva vyhrazena.",
 
@@ -66,7 +66,7 @@ const cs: Record<string, string> = {
   "home.trust.cardsSold": "Prodaných karet",
   "home.trust.transactions": "Úspěšných transakcí",
   "home.trust.rating": "Hodnocení uživatelů",
-  "home.why.badge": "Proč CardPlace.eu?",
+  "home.why.badge": "Proč CardPortal.eu?",
   "home.why.heading": "Vše co potřebujete pro <span class='text-gradient'>sběratelské karty</span>",
   "home.why.desc": "Moderní platforma s AI technologií pro správné ocenění, živé aukce a maximální bezpečnost transakcí.",
   "home.categories.heading": "Prohlédněte si kategorie",
@@ -79,7 +79,7 @@ const cs: Record<string, string> = {
   "home.featured.subtitle": "Nejžhavější aukce, které právě běží",
   "home.trending.weekly": "Týdenní",
   "home.trending.subtitle": "Nejžhavější karty tohoto týdne 🔥",
-  "home.lastSold.subtitle": "Poslední realizované prodeje na CardPlace.eu",
+  "home.lastSold.subtitle": "Poslední realizované prodeje na CardPortal.eu",
   "home.lastSold.buyer": "Kupující",
   "home.lastSold.sold": "Prodáno",
 
@@ -329,7 +329,7 @@ const cs: Record<string, string> = {
   "auth.noAccount": "Nemáš účet? ",
   "auth.signUp": "Registrovat se",
   "auth.createAccount": "Vytvořit účet",
-  "auth.joinDesc": "Připoj se k CardPlace.eu",
+  "auth.joinDesc": "Připoj se k CardPortal.eu",
   "auth.username": "Uživatelské jméno",
   "auth.hasAccount": "Už máš účet? ",
   "auth.registerError": "Registrace se nezdařila",
@@ -526,7 +526,7 @@ const cs: Record<string, string> = {
   "verify.success": "Email úspěšně ověřen!",
   "verify.failed": "Ověření selhalo",
   "verify.loading": "Ověřování emailu...",
-  "verify.continue": "Pokračovat na CardPlace.eu",
+  "verify.continue": "Pokračovat na CardPortal.eu",
   "verify.tryAgain": "Zkusit znovu",
 
   // AuthCallback

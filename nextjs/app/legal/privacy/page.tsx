@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Ochrana osobních údajů (GDPR) — CardPlace.eu",
-  description: "Zásady ochrany osobních údajů a GDPR informace platformy CardPlace.eu.",
+  title: "Ochrana osobních údajů (GDPR) — CardPortal.eu",
+  description: "Zásady ochrany osobních údajů a GDPR informace platformy CardPortal.eu.",
 };
 
 export default function LegalPrivacyPage() {
@@ -12,11 +12,11 @@ export default function LegalPrivacyPage() {
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">1. Správce osobních údajů</h2>
         <div className="bg-[rgba(0,200,255,0.04)] rounded-lg p-4 text-sm">
-          <p><strong>CardPlace s.r.o.</strong></p>
+          <p><strong>CardPortal s.r.o.</strong></p>
           <p>Jizerská 5, 463 62 Hejnice</p>
           <p>IČO: 12345678 · DIČ: CZ12345678</p>
           <p className="text-gray-500 text-xs mt-1">Zapsáno v obchodním rejstříku u Městského soudu v Praze, oddíl C, vložka 123456</p>
-          <p className="mt-2">Email: info@cardplace.eu</p>
+          <p className="mt-2">Email: info@cardportal.eu</p>
         </div>
       </section>
       <section>
@@ -69,7 +69,7 @@ export default function LegalPrivacyPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">8. Kontakt</h2>
-        <p>Veškeré dotazy ohledně zpracování osobních údajů: <a href="mailto:info@cardplace.eu" className="text-[#00C8FF]">info@cardplace.eu</a></p>
+        <p>Veškeré dotazy ohledně zpracování osobních údajů: <a href="mailto:info@cardportal.eu" className="text-[#00C8FF]">info@cardportal.eu</a></p>
       </section>
     </LegalLayout>
   );

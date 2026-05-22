@@ -30,7 +30,7 @@ export default function Footer() {
           <span>Yu-Gi-Oh! data © <a href="https://ygoprodeck.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400">YGOPRODeck</a></span>
         </div>
         <p className="text-xs text-gray-500 text-center mt-3">
-          © {new Date().getFullYear()} CardPlace s.r.o. {t("footer.rights")}
+          © {new Date().getFullYear()} CardPortal s.r.o. {t("footer.rights")}
         </p>
         <p className="text-[10px] text-gray-600 text-center mt-1">
           IČO: 12345678 • Sídlo: Praha, Česká republika

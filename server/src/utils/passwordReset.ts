@@ -35,12 +35,12 @@ export async function sendResetEmail(email: string): Promise<boolean> {
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
       await resend.emails.send({
-        from: process.env.EMAIL_FROM || "CardPlace <noreply@cardplace.eu>",
+        from: process.env.EMAIL_FROM || "CardPortal <noreply@cardportal.eu>",
         to: email,
-        subject: "Obnova hesla — CardPlace.eu",
+        subject: "Obnova hesla — CardPortal.eu",
         html: `
           <h2>Obnova hesla</h2>
-          <p>Někdo požádal o obnovu hesla k tvému účtu CardPlace.eu.</p>
+          <p>Někdo požádal o obnovu hesla k tvému účtu CardPortal.eu.</p>
           <p>Pokud to byl někdo jiný, tento email můžeš ignorovat.</p>
           <a href="${link}" style="display:inline-block;padding:12px 24px;background:#00C8FF;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;">Obnovit heslo</a>
           <p><small>Odkaz platí 1 hodinu.</small></p>

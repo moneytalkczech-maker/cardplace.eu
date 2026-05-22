@@ -21,7 +21,7 @@ const configSchema = z.object({
 
   // Email
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default("CardPlace <noreply@cardplace.eu>"),
+  EMAIL_FROM: z.string().default("CardPortal <noreply@cardportal.eu>"),
 
   // OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),

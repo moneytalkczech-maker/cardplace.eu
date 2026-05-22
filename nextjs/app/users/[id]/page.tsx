@@ -9,17 +9,17 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     if (res.ok) {
       const user = await res.json();
       return {
-        title: `${user.username} — Profil prodejce | CardPlace.eu`,
-        description: `Profil uživatele ${user.username} na CardPlace.eu — ${user.totalSales || 0} prodaných karet, hodnocení důvěry: ${user.trustScore || 0}.`,
+        title: `${user.username} — Profil prodejce | CardPortal.eu`,
+        description: `Profil uživatele ${user.username} na CardPortal.eu — ${user.totalSales || 0} prodaných karet, hodnocení důvěry: ${user.trustScore || 0}.`,
         openGraph: {
-          title: `${user.username} na CardPlace.eu`,
+          title: `${user.username} na CardPortal.eu`,
           description: `Sběratel a prodejce trading cards. Ověřte si profil a aukce.`,
           images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
         },
       };
     }
   } catch {}
-  return { title: "Profil uživatele — CardPlace.eu" };
+  return { title: "Profil uživatele — CardPortal.eu" };
 }
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {

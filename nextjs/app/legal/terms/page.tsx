@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Obchodní podmínky — CardPlace.eu",
-  description: "Obchodní podmínky platformy CardPlace.eu pro aukce sběratelských karet.",
+  title: "Obchodní podmínky — CardPortal.eu",
+  description: "Obchodní podmínky platformy CardPortal.eu pro aukce sběratelských karet.",
 };
 
 export default function LegalTermsPage() {
@@ -11,17 +11,17 @@ export default function LegalTermsPage() {
     <LegalLayout title="Obchodní podmínky" lastUpdated="14. 5. 2026">
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">1. Úvodní ustanovení</h2>
-        <p>Tyto obchodní podmínky upravují vztahy mezi provozovatelem platformy CardPlace.eu a uživateli služby.</p>
+        <p>Tyto obchodní podmínky upravují vztahy mezi provozovatelem platformy CardPortal.eu a uživateli služby.</p>
         <p className="mt-2">Provozovatelem je:</p>
         <div className="bg-[rgba(0,200,255,0.04)] rounded-lg p-4 mt-2 text-sm">
-          <p><strong>CardPlace s.r.o.</strong></p>
+          <p><strong>CardPortal s.r.o.</strong></p>
           <p>Jizerská 5</p>
           <p>463 62 Hejnice</p>
           <p>Česká republika</p>
           <p>IČO: 12345678</p>
           <p>DIČ: CZ12345678</p>
           <p className="text-gray-500 text-xs mt-1">Zapsáno v obchodním rejstříku u Městského soudu v Praze, oddíl C, vložka 123456</p>
-          <p className="mt-2">Email: info@cardplace.eu</p>
+          <p className="mt-2">Email: info@cardportal.eu</p>
         </div>
       </section>
       <section>
@@ -54,11 +54,11 @@ export default function LegalTermsPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">9. Moderace a sankce</h2>
-        <p>CardPlace.eu si vyhrazuje právo moderovat obsah, mazat aukce a blokovat uživatele v případě porušení pravidel.</p>
+        <p>CardPortal.eu si vyhrazuje právo moderovat obsah, mazat aukce a blokovat uživatele v případě porušení pravidel.</p>
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">10. Omezení odpovědnosti</h2>
-        <p>CardPlace s.r.o. nenese odpovědnost za obsah aukcí vytvořených uživateli, kvalitu prodávaných položek ani za jednání mezi kupujícími a prodávajícími. Platforma slouží pouze jako zprostředkovatel.</p>
+        <p>CardPortal s.r.o. nenese odpovědnost za obsah aukcí vytvořených uživateli, kvalitu prodávaných položek ani za jednání mezi kupujícími a prodávajícími. Platforma slouží pouze jako zprostředkovatel.</p>
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">11. Řešení sporů</h2>
@@ -66,7 +66,7 @@ export default function LegalTermsPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">12. Odstoupení od smlouvy</h2>
-        <p>Spotřebitel má právo odstoupit od smlouvy do 14 dnů od převzetí zboží bez uvedení důvodu (§ 1829 NOZ). Pro uplatnění práva zašli email na <a href="mailto:info@cardplace.eu" className="text-[#00C8FF]">info@cardplace.eu</a>.</p>
+        <p>Spotřebitel má právo odstoupit od smlouvy do 14 dnů od převzetí zboží bez uvedení důvodu (§ 1829 NOZ). Pro uplatnění práva zašli email na <a href="mailto:info@cardportal.eu" className="text-[#00C8FF]">info@cardportal.eu</a>.</p>
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">13. Reklamace</h2>
@@ -78,7 +78,7 @@ export default function LegalTermsPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">15. Kontakt</h2>
-        <p>Veškeré dotazy: <a href="mailto:info@cardplace.eu" className="text-[#00C8FF]">info@cardplace.eu</a></p>
+        <p>Veškeré dotazy: <a href="mailto:info@cardportal.eu" className="text-[#00C8FF]">info@cardportal.eu</a></p>
       </section>
     </LegalLayout>
   );

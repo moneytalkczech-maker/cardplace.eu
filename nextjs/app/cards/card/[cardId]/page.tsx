@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: { cardId: string } 
       const card = await res.json();
       const desc = `${card.name} — ${card.set?.name || ""}${card.rarity ? ` · ${card.rarity}` : ""}. Orientační cena a historický vývoj hodnoty.`;
       return {
-        title: `${card.name} — ${card.set?.name || "Karty"} | CardPlace.eu`,
+        title: `${card.name} — ${card.set?.name || "Karty"} | CardPortal.eu`,
         description: desc.slice(0, 155),
         openGraph: {
           title: `${card.name} — ${card.set?.name || ""}`,
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: { cardId: string } 
       };
     }
   } catch {}
-  return { title: "Detail karty — CardPlace.eu" };
+  return { title: "Detail karty — CardPortal.eu" };
 }
 
 export default function CardDetailPage() {

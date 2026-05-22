@@ -10,8 +10,8 @@ export async function generateMetadata({ params }: { params: { setSlug: string }
       const set = sets.find((s) => s.slug === params.setSlug);
       if (set) {
         return {
-          title: `${set.name} — ${set.game} | CardPlace.eu`,
-          description: `Karty z edice ${set.name} (${set.game}). Prohlédni si databázi karet a najdi aukce na CardPlace.eu.`,
+          title: `${set.name} — ${set.game} | CardPortal.eu`,
+          description: `Karty z edice ${set.name} (${set.game}). Prohlédni si databázi karet a najdi aukce na CardPortal.eu.`,
           openGraph: {
             title: `${set.name} — ${set.game}`,
             description: `Databáze karet z edice ${set.name}.`,
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: { params: { setSlug: string }
     }
   } catch {}
   return {
-    title: "Edice karet — CardPlace.eu",
-    description: "Databáze sběratelských karet na CardPlace.eu.",
+    title: "Edice karet — CardPortal.eu",
+    description: "Databáze sběratelských karet na CardPortal.eu.",
   };
 }
 

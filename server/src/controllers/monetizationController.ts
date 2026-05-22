@@ -124,7 +124,7 @@ export async function assignFounder(req: AuthRequest, res: Response) {
 
     await tx.notification.create({
       data: {
-        message: "🎉 Jsi founder CardPlace.eu! Získáváš VIP status, verified badge a 10 kreditů zdarma.",
+        message: "🎉 Jsi founder CardPortal.eu! Získáváš VIP status, verified badge a 10 kreditů zdarma.",
         type: "INFO",
         userId,
       },

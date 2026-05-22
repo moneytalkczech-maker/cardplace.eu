@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Zakázané položky — CardPlace.eu",
-  description: "Přehled zakázaných položek a padělků na platformě CardPlace.eu.",
+  title: "Zakázané položky — CardPortal.eu",
+  description: "Přehled zakázaných položek a padělků na platformě CardPortal.eu.",
 };
 
 export default function LegalProhibitedPage() {
   return (
     <LegalLayout title="Zakázané položky" lastUpdated="14. 5. 2026">
       <section>
-        <p className="mb-4">Na platformě CardPlace.eu je přísně zakázáno prodávat následující položky:</p>
+        <p className="mb-4">Na platformě CardPortal.eu je přísně zakázáno prodávat následující položky:</p>
         <div className="space-y-4">
           {[
             { title: "Fake / Padělky", desc: "Jakékoliv neoriginální karty vydávané za pravé. Včetně napodobenin slabikářů, textur a log." },

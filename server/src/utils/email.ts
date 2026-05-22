@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM || "CardPlace <noreply@cardplace.eu>";
+const FROM = process.env.EMAIL_FROM || "CardPortal <noreply@cardportal.eu>";
 
 function linkify(auctionId: string) {
   return `${process.env.CORS_ORIGIN}/auctions/${auctionId}`;
@@ -45,20 +45,20 @@ export async function sendPaymentReceivedEmail(to: string, username: string, auc
 
 export async function sendWelcomeEmail(to: string, username: string) {
   if (!resend) return;
-  const base = process.env.CORS_ORIGIN || "https://cardplace.eu";
+  const base = process.env.CORS_ORIGIN || "https://cardportal.eu";
   await resend.emails.send({
     from: FROM, to,
-    subject: "Vítej v CardPlace.eu!",
+    subject: "Vítej v CardPortal.eu!",
     html: `
       <p>Ahoj ${username},</p>
-      <p>Vítej v CardPlace.eu — první CZ/SK platformě pro sběratele trading cards.</p>
+      <p>Vítej v CardPortal.eu — první CZ/SK platformě pro sběratele trading cards.</p>
       <p>Teď můžeš:</p>
       <ul>
         <li>📸 <a href="${base}/scan">Naskenovat kartu AI skenerem</a></li>
         <li>🔨 <a href="${base}/auctions">Prohlédnout aktivní aukce</a></li>
         <li>➕ <a href="${base}/auctions/create">Vytvořit svoji aukci</a></li>
       </ul>
-      <p>Tým CardPlace.eu</p>
+      <p>Tým CardPortal.eu</p>
     `,
   });
 }
