@@ -34,11 +34,10 @@ export default function AdminUsers() {
   const fetchUsers = (p: number = page) => {
     setLoading(true);
     setError(null);
-    adminApi.listUsers(p, 50).then((response: any) => {
-      const result = response.data ? response.data : response;
-      setUsers(Array.isArray(result) ? result : result.data || []);
-      setTotalPages(result.totalPages || 1);
-      setTotal(result.total || 0);
+    adminApi.listUsers(p, 50).then((response: { data: AdminUser[]; total: number; totalPages: number }) => {
+      setUsers(response.data);
+      setTotalPages(response.totalPages);
+      setTotal(response.total);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání uživatelů");
     }).finally(() => setLoading(false));
@@ -66,7 +65,7 @@ export default function AdminUsers() {
 
   const handleBanToggle = async (id: string, username: string) => {
     try {
-      const result = await adminApi.toggleUserBan(id);
+      const result = await adminApi.toggleUserBan(id) as { banned?: boolean; status?: string };
       const action = result.banned !== undefined ? (result.banned ? "banned" : "unbanned") : (result.status === "banned" ? "banned" : "unbanned");
       toast("success", action === "banned" ? `Uživatel "${username}" zabanován` : `Uživatel "${username}" odbanován`);
       fetchUsers();

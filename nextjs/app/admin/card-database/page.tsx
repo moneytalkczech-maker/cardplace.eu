@@ -36,10 +36,10 @@ export default function AdminCardDatabase() {
   const fetchCards = (p: number = page, s: string = search) => {
     setLoading(true);
     setError(null);
-    adminApi.listDatabaseCards(p, 50, s || undefined).then((response: any) => {
-      setCards(response.data || []);
-      setTotalPages(response.totalPages || 1);
-      setTotal(response.total || 0);
+    adminApi.listDatabaseCards(p, 50, s || undefined).then((response: { data: DbCard[]; total: number; totalPages: number }) => {
+      setCards(response.data);
+      setTotalPages(response.totalPages);
+      setTotal(response.total);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání databáze karet");
     }).finally(() => setLoading(false));

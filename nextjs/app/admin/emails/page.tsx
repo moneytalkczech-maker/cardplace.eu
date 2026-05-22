@@ -28,8 +28,8 @@ export default function AdminEmails() {
   const fetchTemplates = () => {
     setLoading(true);
     setError(null);
-    adminApi.listEmailTemplates().then((data: any) => {
-      setTemplates(Array.isArray(data) ? data : []);
+    adminApi.listEmailTemplates().then((data: EmailTemplate[]) => {
+      setTemplates(data);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání šablon");
     }).finally(() => setLoading(false));

@@ -34,10 +34,10 @@ export default function AdminCards() {
   const fetchCards = (p: number = page, s: string = search) => {
     setLoading(true);
     setError(null);
-    adminApi.listCards(p, 50, s || undefined).then((response: any) => {
-      setCards(response.data || []);
-      setTotalPages(response.totalPages || 1);
-      setTotal(response.total || 0);
+    adminApi.listCards(p, 50, s || undefined).then((response: { data: AdminCard[]; total: number; totalPages: number }) => {
+      setCards(response.data);
+      setTotalPages(response.totalPages);
+      setTotal(response.total);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání karet");
     }).finally(() => setLoading(false));

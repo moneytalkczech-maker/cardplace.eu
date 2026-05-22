@@ -42,12 +42,11 @@ export default function AdminAuditLog() {
     setLoading(true);
     setError(null);
     api.get("/admin/audit-log", { params: { page, limit: 30 } })
-      .then((r) => r.data)
-      .then((response: any) => {
-        const result = response.data || response;
-        setLogs(Array.isArray(result) ? result : result.data || []);
-        setTotalPages(result.totalPages || 1);
-        setTotal(result.total || 0);
+      .then((r) => r.data as { data: AuditEntry[]; total: number; totalPages: number })
+      .then((response) => {
+        setLogs(response.data);
+        setTotalPages(response.totalPages);
+        setTotal(response.total);
       })
       .catch((err: any) => {
         setError(err.response?.data?.error || "Chyba při načítání audit logu");

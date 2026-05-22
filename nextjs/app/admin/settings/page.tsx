@@ -33,11 +33,10 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     setError(null);
     adminApi.listSettings()
-      .then((data: any) => {
-        const list = Array.isArray(data) ? data : data.data || [];
-        setSettings(list);
+      .then((data: SiteSetting[]) => {
+        setSettings(data);
         const vals: Record<string, string> = {};
-        list.forEach((s: SiteSetting) => { vals[s.id] = s.value; });
+        data.forEach((s) => { vals[s.id] = s.value; });
         setEditedValues(vals);
       })
       .catch((err: any) => {

@@ -30,8 +30,8 @@ export default function AdminLegal() {
   const fetchDocs = () => {
     setLoading(true);
     setError(null);
-    adminApi.listLegalDocuments().then((data: any) => {
-      setDocs(Array.isArray(data) ? data : []);
+    adminApi.listLegalDocuments().then((data: LegalDocument[]) => {
+      setDocs(data);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání dokumentů");
     }).finally(() => setLoading(false));

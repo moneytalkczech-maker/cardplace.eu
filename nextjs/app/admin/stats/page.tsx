@@ -37,14 +37,13 @@ export default function AdminStats() {
   useEffect(() => {
     setError(null);
     adminApi.getStats()
-      .then((response: any) => {
-        const data = response.data || response;
+      .then((data: Stats) => {
         setStats({
-          users: data.users ?? data.userCount ?? 0,
-          auctions: data.auctions ?? data.auctionCount ?? 0,
-          bids: data.bids ?? data.bidCount ?? 0,
-          transactions: data.transactions ?? data.transactionCount ?? 0,
-          collections: data.collections ?? data.collectionCount ?? 0,
+          users: data.users ?? 0,
+          auctions: data.auctions ?? 0,
+          bids: data.bids ?? 0,
+          transactions: data.transactions ?? 0,
+          collections: data.collections ?? 0,
         });
       })
       .catch((err: any) => {

@@ -24,11 +24,10 @@ export default function AdminSecurity() {
   const fetchSettings = () => {
     setLoading(true);
     setError(null);
-    adminApi.getSecuritySettings().then((data: any) => {
-      const arr = Array.isArray(data) ? data : [];
-      setSettings(arr);
+    adminApi.getSecuritySettings().then((data: SecuritySetting[]) => {
+      setSettings(data);
       const v: Record<string, string> = {};
-      arr.forEach((s: SecuritySetting) => { v[s.key] = s.value; });
+      data.forEach((s) => { v[s.key] = s.value; });
       setValues(v);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání nastavení");

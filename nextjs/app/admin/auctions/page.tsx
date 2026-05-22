@@ -40,11 +40,10 @@ export default function AdminAuctions() {
   const fetchAuctions = (p: number = page) => {
     setLoading(true);
     setError(null);
-    adminApi.listAuctions(p, 50).then((response: any) => {
-      const result = response.data ? response.data : response;
-      setAuctions(Array.isArray(result) ? result : result.data || []);
-      setTotalPages(result.totalPages || 1);
-      setTotal(result.total || 0);
+    adminApi.listAuctions(p, 50).then((response: { data: AdminAuction[]; total: number; totalPages: number }) => {
+      setAuctions(response.data);
+      setTotalPages(response.totalPages);
+      setTotal(response.total);
     }).catch((err: any) => {
       setError(err.response?.data?.error || "Chyba při načítání aukcí");
     }).finally(() => setLoading(false));
@@ -65,7 +64,7 @@ export default function AdminAuctions() {
 
   const handleFeatureToggle = async (id: string) => {
     try {
-      const result = await adminApi.toggleAuctionFeature(id);
+      const result = await adminApi.toggleAuctionFeature(id) as { featured: boolean };
       toast("success", result.featured ? t("admin.auctionFeatured") : t("admin.auctionUnfeatured"));
       fetchAuctions(page);
     } catch (err: any) {

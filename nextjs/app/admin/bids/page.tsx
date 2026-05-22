@@ -26,12 +26,11 @@ export default function AdminBids() {
     setLoading(true);
     setError(null);
     api.get("/admin/bids", { params: { page, limit: 30 } })
-      .then((r) => r.data)
-      .then((response: any) => {
-        const result = response.data || response;
-        setBids(Array.isArray(result) ? result : result.data || []);
-        setTotalPages(result.totalPages || 1);
-        setTotal(result.total || 0);
+      .then((r) => r.data as { data: Bid[]; total: number; totalPages: number })
+      .then((response) => {
+        setBids(response.data);
+        setTotalPages(response.totalPages);
+        setTotal(response.total);
       })
       .catch((err: any) => {
         setError(err.response?.data?.error || "Chyba při načítání příhozů");
