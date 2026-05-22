@@ -14,7 +14,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+  output: process.env.DOCKER === "true" ? "standalone" : undefined,
   async headers() {
     return [
       {
