@@ -1,7 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { auth, users, setApiToken } from "@/lib/api";
-import api from "@/lib/api";
+import api, { auth, users, setApiToken } from "@/lib/api";
 import type { User, Notification } from "@/types";
 
 const LOGGED_IN_KEY = "cardplace_logged_in";
