@@ -1,16 +1,32 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
+const securityHeaders = [
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "microphone=(), geolocation=()" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+    ];
+  },
   async rewrites() {
     const expressUrl = process.env.EXPRESS_URL || "http://localhost:3001";
     return [
-      // All /api/* calls proxy to Express EXCEPT /api/scan (handled by Next.js route)
-      {
-        source: "/api/scan",
-        destination: "/api/scan",
-      },
+      // /api/scan is handled by Next.js app/api/scan/route.ts — no rewrite needed
       {
         source: "/api/:path*",
         destination: `${expressUrl}/api/:path*`,

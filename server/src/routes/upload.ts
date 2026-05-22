@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -7,6 +8,15 @@ import { authenticate } from "../middleware/auth";
 import { validateFileType, getAllowedMimeTypes } from "../utils/fileValidation";
 
 const router = Router();
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50,
+  message: { error: "Příliš mnoho nahraných souborů. Zkuste to za hodinu." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+});
 
 const uploadDir = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -71,7 +81,7 @@ function uploadHandler(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-router.post("/", authenticate, uploadHandler, validateMagicBytes, (req: Request, res: Response) => {
+router.post("/", uploadLimiter, authenticate, uploadHandler, validateMagicBytes, (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
