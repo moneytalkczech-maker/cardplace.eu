@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Grid3X3, Search, Filter, AlertCircle } from "lucide-react";
+import { ArrowLeft, Grid3X3, Search, Filter, AlertCircle, PackagePlus } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import QuickAddModal, { type QuickAddCard } from "../components/QuickAddModal";
 
 interface CardItem {
   id: string; name: string; slug: string; cardNumber: string | null;
@@ -25,6 +27,8 @@ const RARITY_COLORS: Record<string, string> = {
 
 export default function CardSetDetailPage() {
   const { setSlug } = useParams();
+  const { user } = useAuthStore();
+  const [addCard, setAddCard] = useState<QuickAddCard | null>(null);
   const [set, setSet] = useState<CardSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -98,32 +102,54 @@ export default function CardSetDetailPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((card) => (
-            <Link key={card.id} to={`/cards/card/${card.id}`}
-              className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-4 hover:border-[rgba(0,200,255,0.25)] transition-all group">
-              {/* Card image placeholder */}
-              <div className="aspect-[3/4] rounded-lg bg-gradient-to-br from-[rgba(0,200,255,0.05)] to-[rgba(0,200,255,0.02)] mb-3 flex items-center justify-center">
-                {card.imageUrl ? (
-                  <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
-                ) : (
-                  <span className="text-4xl opacity-20">
-                    {set.category === "pokemon" ? "🃏" : "⚽"}
-                  </span>
+            <div key={card.id} className="rounded-xl border border-[rgba(0,200,255,0.08)] bg-[#0B1220] p-4 hover:border-[rgba(0,200,255,0.25)] transition-all group flex flex-col">
+              <Link to={`/cards/card/${card.id}`} className="block flex-1">
+                <div className="aspect-[3/4] rounded-lg bg-gradient-to-br from-[rgba(0,200,255,0.05)] to-[rgba(0,200,255,0.02)] mb-3 flex items-center justify-center">
+                  {card.imageUrl ? (
+                    <img src={card.imageUrl} alt={card.name} loading="lazy" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-4xl opacity-20">
+                      {set.category === "pokemon" ? "🃏" : "⚽"}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-heading font-bold text-sm group-hover:text-[#00C8FF] transition-colors">{card.name}</h3>
+                {card.playerName && <p className="text-xs text-gray-500">{card.playerName}</p>}
+                <div className="flex items-center justify-between mt-2">
+                  {card.rarity && <span className={`text-xs font-bold ${RARITY_COLORS[card.rarity] || "text-gray-500"}`}>{card.rarity}</span>}
+                  {card.cardNumber && <span className="text-xs text-gray-600">{card.cardNumber}</span>}
+                </div>
+                {(card.priceCardmarketAvg || card.priceEbayAvg) && (
+                  <p className="text-xs text-[#A7FF00] font-bold mt-2">
+                    ~{(card.priceCardmarketAvg ?? card.priceEbayAvg)!.toLocaleString("cs-CZ")} Kč
+                  </p>
                 )}
-              </div>
-              <h3 className="font-heading font-bold text-sm group-hover:text-[#00C8FF] transition-colors">{card.name}</h3>
-              {card.playerName && <p className="text-xs text-gray-500">{card.playerName}</p>}
-              <div className="flex items-center justify-between mt-2">
-                {card.rarity && <span className={`text-xs font-bold ${RARITY_COLORS[card.rarity] || "text-gray-500"}`}>{card.rarity}</span>}
-                {card.cardNumber && <span className="text-xs text-gray-600">{card.cardNumber}</span>}
-              </div>
-              {(card.priceCardmarketAvg || card.priceEbayAvg) && (
-                <p className="text-xs text-[#A7FF00] font-bold mt-2">
-                  {card.priceCardmarketAvg ? `~${card.priceCardmarketAvg.toLocaleString("cs-CZ")} Kč` : ""}
-                </p>
+              </Link>
+              {user && (
+                <button
+                  onClick={() => setAddCard({
+                    id: card.id,
+                    name: card.name,
+                    setName: set.name,
+                    rarity: card.rarity,
+                    imageUrl: card.imageUrl,
+                    estimatedPrice: card.priceCardmarketAvg ?? card.priceEbayAvg,
+                  })}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-[rgba(167,255,0,0.2)] text-[#A7FF00] text-xs font-heading font-bold hover:bg-[rgba(167,255,0,0.08)] transition-colors"
+                >
+                  <PackagePlus className="h-3.5 w-3.5" /> Do sbírky
+                </button>
               )}
-            </Link>
+            </div>
           ))}
         </div>
+      )}
+
+      {addCard && (
+        <QuickAddModal
+          card={addCard}
+          onClose={() => setAddCard(null)}
+        />
       )}
     </div>
   );
