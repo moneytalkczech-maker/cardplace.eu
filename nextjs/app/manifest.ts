@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CardPortal.eu — Aukce sběratelských karet",
-    short_name: "CardPortal",
+    name: "CardPlace.eu — Aukce sběratelských karet",
+    short_name: "CardPlace",
     description: "Největší česká platforma pro aukce sběratelských karet. Pokémon, MTG, Yu-Gi-Oh! a sportovní karty.",
     start_url: "/",
     display: "standalone",

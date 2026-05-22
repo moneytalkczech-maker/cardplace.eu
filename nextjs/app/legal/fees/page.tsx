@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Ceník poplatků — CardPortal.eu",
-  description: "Přehled poplatků za aukce a prodej na platformě CardPortal.eu.",
+  title: "Ceník poplatků — CardPlace.eu",
+  description: "Přehled poplatků za aukce a prodej na platformě CardPlace.eu.",
 };
 
 export default function LegalFeesPage() {
   return (
     <LegalLayout title="Ceník a poplatky" lastUpdated="14. 5. 2026">
       <section>
-        <p className="mb-4">CardPortal.eu si účtuje poplatky za využívání platformy. Všechny ceny jsou uvedeny včetně DPH.</p>
+        <p className="mb-4">CardPlace.eu si účtuje poplatky za využívání platformy. Všechny ceny jsou uvedeny včetně DPH.</p>
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">Prodejní poplatek</h2>

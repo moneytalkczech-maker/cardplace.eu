@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Nastavení — CardPortal.eu",
+  title: "Nastavení — CardPlace.eu",
   description: "Spravuj nastavení účtu, bezpečnost a prémiové funkce.",
   robots: "noindex",
 };

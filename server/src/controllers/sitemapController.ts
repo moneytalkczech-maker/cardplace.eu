@@ -3,7 +3,7 @@ import prisma from "../utils/prisma";
 
 export async function cardSetsSitemap(_req: Request, res: Response) {
   const sets = await prisma.cardSet.findMany({ select: { slug: true, updatedAt: true } });
-  const baseUrl = process.env.CORS_ORIGIN || "https://cardportal.eu";
+  const baseUrl = process.env.CORS_ORIGIN || "https://cardplace.eu";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -22,7 +22,7 @@ export async function cardSetsSitemap(_req: Request, res: Response) {
 
 export async function cardsSitemap(_req: Request, res: Response) {
   const cards = await prisma.databaseCard.findMany({ select: { id: true, updatedAt: true } });
-  const baseUrl = process.env.CORS_ORIGIN || "https://cardportal.eu";
+  const baseUrl = process.env.CORS_ORIGIN || "https://cardplace.eu";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

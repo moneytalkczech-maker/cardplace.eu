@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Pravidla aukcí — CardPortal.eu",
-  description: "Pravidla aukcí a podmínky pro prodejce a kupující na CardPortal.eu.",
+  title: "Pravidla aukcí — CardPlace.eu",
+  description: "Pravidla aukcí a podmínky pro prodejce a kupující na CardPlace.eu.",
 };
 
 export default function LegalAuctionRulesPage() {
@@ -27,7 +27,7 @@ export default function LegalAuctionRulesPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">5. Scam a chargebacky</h2>
-        <p>Podvodné jednání je trestné a bude hlášeno Policii ČR. CardPortal.eu spolupracuje s orgány činnými v trestním řízení.</p>
+        <p>Podvodné jednání je trestné a bude hlášeno Policii ČR. CardPlace.eu spolupracuje s orgány činnými v trestním řízení.</p>
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">6. Refundy</h2>
@@ -35,7 +35,7 @@ export default function LegalAuctionRulesPage() {
       </section>
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">7. Moderace</h2>
-        <p>CardPortal.eu si vyhrazuje právo zrušit aukci, blokovat uživatele nebo omezit funkce v případě porušení pravidel.</p>
+        <p>CardPlace.eu si vyhrazuje právo zrušit aukci, blokovat uživatele nebo omezit funkce v případě porušení pravidel.</p>
       </section>
     </LegalLayout>
   );

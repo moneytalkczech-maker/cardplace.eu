@@ -32,8 +32,8 @@ export async function submitContact(req: ContactRequest, res: Response) {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: process.env.EMAIL_FROM || "CardPortal <noreply@cardportal.eu>",
-        to: "info@cardportal.eu",
+        from: process.env.EMAIL_FROM || "CardPlace <noreply@cardplace.eu>",
+        to: "info@cardplace.eu",
         subject: `📩 Kontaktní formulář: ${name}`,
         html: `
           <h2>Nová zpráva z kontaktního formuláře</h2>

@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         ? auction.description.slice(0, 155)
         : `Aukce: ${auction.title} — aktuální cena ${(auction.currentPrice || 0).toLocaleString("cs-CZ")} Kč`;
       return {
-        title: `${auction.title} — CardPortal.eu`,
+        title: `${auction.title} — CardPlace.eu`,
         description: desc,
         openGraph: {
           title: auction.title,
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       };
     }
   } catch {}
-  return { title: "Aukce — CardPortal.eu" };
+  return { title: "Aukce — CardPlace.eu" };
 }
 
 export default function AuctionDetailPage() {

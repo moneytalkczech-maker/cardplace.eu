@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Aukce karet — CardPortal.eu",
-  description: "Procházej živé aukce Pokémon, MTG, sports karet a dalších sběratelských karet. Přihazuj v reálném čase na CardPortal.eu.",
+  title: "Aukce karet — CardPlace.eu",
+  description: "Procházej živé aukce Pokémon, MTG, sports karet a dalších sběratelských karet. Přihazuj v reálném čase na CardPlace.eu.",
   openGraph: {
-    title: "Aukce karet — CardPortal.eu",
+    title: "Aukce karet — CardPlace.eu",
     description: "Živé aukce trading cards. Pokémon, MTG, sports karty a více.",
   },
 };

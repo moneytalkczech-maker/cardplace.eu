@@ -32,7 +32,7 @@ export default function ContactPage() {
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">Provozovatel</h2>
         <div className="bg-[rgba(0,200,255,0.04)] rounded-lg p-4 text-sm space-y-0.5">
-          <p><strong>CardPortal s.r.o.</strong></p>
+          <p><strong>CardPlace s.r.o.</strong></p>
           <p>Jizerská 5</p>
           <p>463 62 Hejnice</p>
           <p>IČO: 12345678 · DIČ: CZ12345678</p>
@@ -45,7 +45,7 @@ export default function ContactPage() {
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[#00C8FF]" />
-            <a href="mailto:info@cardportal.eu" className="text-[#00C8FF] hover:underline">info@cardportal.eu</a>
+            <a href="mailto:info@cardplace.eu" className="text-[#00C8FF] hover:underline">info@cardplace.eu</a>
           </div>
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-[#00C8FF]" />
@@ -79,7 +79,7 @@ export default function ContactPage() {
 
       <section>
         <h2 className="text-lg font-bold font-heading text-white mb-3">Technická podpora</h2>
-        <p className="text-sm">Pro technické problémy nebo hlášení závad kontaktujte <a href="mailto:info@cardportal.eu" className="text-[#00C8FF]">info@cardportal.eu</a>.</p>
+        <p className="text-sm">Pro technické problémy nebo hlášení závad kontaktujte <a href="mailto:info@cardplace.eu" className="text-[#00C8FF]">info@cardplace.eu</a>.</p>
       </section>
     </LegalLayout>
   );

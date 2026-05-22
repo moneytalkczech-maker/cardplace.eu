@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Zprávy — CardPortal.eu",
-  description: "Komunikuj s kupujícími a prodejci přímo na CardPortal.eu.",
+  title: "Zprávy — CardPlace.eu",
+  description: "Komunikuj s kupujícími a prodejci přímo na CardPlace.eu.",
   robots: "noindex",
 };
 

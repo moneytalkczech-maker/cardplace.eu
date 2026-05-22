@@ -9,11 +9,11 @@ import ToastContainer from "@/components/ui/Toast";
 import CookieConsent from "@/components/ui/CookieConsent";
 
 export const metadata: Metadata = {
-  title: "CardPortal.eu — Trading Card Marketplace",
+  title: "CardPlace.eu — Trading Card Marketplace",
   description: "Moderní aukční platforma pro sběratele trading cards. Skenuj, draž a sbírej Pokémon, MTG, sports karty a další.",
   keywords: "trading cards, pokemon, magic the gathering, karty, aukce, marketplace, sběratelé",
   openGraph: {
-    title: "CardPortal.eu",
+    title: "CardPlace.eu",
     description: "Největší CZ/SK marketplace pro sběratelské karty",
     type: "website",
     locale: "cs_CZ",

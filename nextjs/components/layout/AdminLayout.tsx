@@ -118,7 +118,7 @@ export default function AdminLayout({ children, title }: { children: React.React
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00C8FF] to-[#009DFF] flex items-center justify-center">
               <ShieldCheck className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-bold font-heading text-gradient">CardPortal</span>
+            <span className="text-lg font-bold font-heading text-gradient">CardPlace</span>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 uppercase tracking-wider">Admin</span>
           </Link>
         </div>

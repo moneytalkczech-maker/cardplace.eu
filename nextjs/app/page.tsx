@@ -154,7 +154,7 @@ export default async function HomePage() {
           <div className="text-center mb-10">
             <div className="badge-green inline-flex items-center gap-2 mb-4">
               <Sparkles className="h-4 w-4" />
-              Proč CardPortal.eu?
+              Proč CardPlace.eu?
             </div>
             <h2 className="heading-lg text-white mb-2">Vše co potřebujete pro <span className="text-gradient">sběratelské karty</span></h2>
             <p className="text-gray-500 max-w-xl mx-auto">Moderní platforma s AI technologií pro správné ocenění, živé aukce a maximální bezpečnost.</p>

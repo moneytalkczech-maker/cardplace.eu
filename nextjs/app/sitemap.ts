@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL || "https://cardportal.eu";
+const BASE = process.env.NEXT_PUBLIC_BASE_URL || "https://cardplace.eu";
 const EXPRESS = process.env.EXPRESS_URL || "http://localhost:3001";
 
 async function fetchJson<T>(url: string): Promise<T[]> {

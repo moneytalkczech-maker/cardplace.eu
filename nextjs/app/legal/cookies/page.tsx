@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import LegalLayout from "@/components/layout/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Cookies — CardPortal.eu",
-  description: "Informace o používání cookies na platformě CardPortal.eu.",
+  title: "Cookies — CardPlace.eu",
+  description: "Informace o používání cookies na platformě CardPlace.eu.",
 };
 
 export default function LegalCookiesPage() {

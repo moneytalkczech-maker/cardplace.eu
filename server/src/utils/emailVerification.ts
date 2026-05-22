@@ -32,11 +32,11 @@ export async function sendVerificationEmail(userId: string, email: string): Prom
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
       await resend.emails.send({
-        from: process.env.EMAIL_FROM || "CardPortal <noreply@cardportal.eu>",
+        from: process.env.EMAIL_FROM || "CardPlace <noreply@cardplace.eu>",
         to: email,
-        subject: "Ověř svůj email — CardPortal.eu",
+        subject: "Ověř svůj email — CardPlace.eu",
         html: `
-          <h2>Vítej v CardPortal.eu!</h2>
+          <h2>Vítej v CardPlace.eu!</h2>
           <p>Pro aktivaci účtu klikni na tlačítko:</p>
           <a href="${link}" style="display:inline-block;padding:12px 24px;background:#00C8FF;color:#000;text-decoration:none;border-radius:8px;font-weight:bold;">Ověřit email</a>
           <p><small>Platnost odkazu: 24 hodin</small></p>

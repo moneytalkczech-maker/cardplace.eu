@@ -8,10 +8,10 @@ async function seed() {
   // 1. Admin user
   const adminPassword = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
-    where: { email: "admin@cardportal.eu" },
+    where: { email: "admin@cardplace.eu" },
     update: {},
     create: {
-      email: "admin@cardportal.eu",
+      email: "admin@cardplace.eu",
       username: "admin",
       password: adminPassword,
       role: "admin",
@@ -29,10 +29,10 @@ async function seed() {
   const usernames = ["sběratel1", "pokemonMaster", "magicFan", "yugiohPro", "cardCollector", "traderCZ", "rareHunter", "flipperSK", "vintageCards", "newbie2024"];
   for (let i = 0; i < 10; i++) {
     const user = await prisma.user.upsert({
-      where: { email: `user${i + 1}@cardportal.eu` },
+      where: { email: `user${i + 1}@cardplace.eu` },
       update: {},
       create: {
-        email: `user${i + 1}@cardportal.eu`,
+        email: `user${i + 1}@cardplace.eu`,
         username: usernames[i],
         password: userPassword,
         role: "user",
@@ -125,8 +125,8 @@ async function seed() {
 
   // 5. Site settings
   const settings = [
-    { key: "platform_name", value: "CardPortal.eu", type: "string", group: "general", description: "Název platformy" },
-    { key: "support_email", value: "info@cardportal.eu", type: "string", group: "general", description: "Kontaktní email" },
+    { key: "platform_name", value: "CardPlace.eu", type: "string", group: "general", description: "Název platformy" },
+    { key: "support_email", value: "info@cardplace.eu", type: "string", group: "general", description: "Kontaktní email" },
     { key: "max_auction_duration", value: "14", type: "number", group: "general", description: "Maximální délka aukce (dny)" },
     { key: "min_auction_price", value: "10", type: "number", group: "fees", description: "Minimální vyvolávací cena" },
     { key: "fee_percent", value: "5", type: "number", group: "fees", description: "Provize platformy (%)" },

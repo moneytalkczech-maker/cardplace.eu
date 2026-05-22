@@ -26,7 +26,7 @@ const en: Record<string, string> = {
   "footer.auctionRules": "Auction Rules",
   "footer.prohibited": "Prohibited Items",
   "footer.contact": "Contact",
-  "footer.contactEmail": "info@cardportal.eu",
+  "footer.contactEmail": "info@cardplace.eu",
   "footer.address": "Jizerská 5, 463 62 Hejnice, Czech Republic",
   "footer.rights": "All rights reserved.",
 
@@ -66,7 +66,7 @@ const en: Record<string, string> = {
   "home.trust.cardsSold": "Cards sold",
   "home.trust.transactions": "Successful transactions",
   "home.trust.rating": "User rating",
-  "home.why.badge": "Why CardPortal.eu?",
+  "home.why.badge": "Why CardPlace.eu?",
   "home.why.heading": "Everything you need for <span class='text-gradient'>trading cards</span>",
   "home.why.desc": "Modern platform with AI technology for accurate pricing, live auctions and maximum transaction security.",
   "home.categories.heading": "Browse categories",
@@ -79,7 +79,7 @@ const en: Record<string, string> = {
   "home.featured.subtitle": "Hottest auctions running right now",
   "home.trending.weekly": "Weekly",
   "home.trending.subtitle": "Hottest cards this week 🔥",
-  "home.lastSold.subtitle": "Recently completed sales on CardPortal.eu",
+  "home.lastSold.subtitle": "Recently completed sales on CardPlace.eu",
   "home.lastSold.buyer": "Buyer",
   "home.lastSold.sold": "Sold",
 
@@ -329,7 +329,7 @@ const en: Record<string, string> = {
   "auth.noAccount": "Don't have an account? ",
   "auth.signUp": "Sign up",
   "auth.createAccount": "Create account",
-  "auth.joinDesc": "Join CardPortal.eu",
+  "auth.joinDesc": "Join CardPlace.eu",
   "auth.username": "Username",
   "auth.hasAccount": "Already have an account? ",
   "auth.registerError": "Registration failed",
@@ -526,7 +526,7 @@ const en: Record<string, string> = {
   "verify.success": "Email verified successfully!",
   "verify.failed": "Verification failed",
   "verify.loading": "Verifying email...",
-  "verify.continue": "Continue to CardPortal.eu",
+  "verify.continue": "Continue to CardPlace.eu",
   "verify.tryAgain": "Try again",
 
   // AuthCallback

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "CardPortal.eu — Aukce sběratelských karet";
+export const alt = "CardPlace.eu — Aukce sběratelských karet";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -63,7 +63,7 @@ export default function OgImage() {
             <span style={{ fontSize: 40, fontWeight: 900, color: "#00C8FF" }}>C</span>
           </div>
           <span style={{ fontSize: 52, fontWeight: 900, color: "#FFFFFF", letterSpacing: -2 }}>
-            CardPortal
+            CardPlace
             <span style={{ color: "#00C8FF" }}>.eu</span>
           </span>
         </div>

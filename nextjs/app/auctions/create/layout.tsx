@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Vytvořit aukci — CardPortal.eu",
+  title: "Vytvořit aukci — CardPlace.eu",
   description: "Vytvoř novou aukci pro svou sběratelskou kartu. Nastav cenu, podmínky a délku aukce.",
   robots: "noindex",
 };
