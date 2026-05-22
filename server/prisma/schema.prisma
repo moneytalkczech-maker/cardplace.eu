@@ -46,6 +46,7 @@ model User {
   referred          Referral[]   @relation("Referred")
   wantedCards       WantedCard[]
   collection        CollectionItem[]
+  collectionSnapshots CollectionValueSnapshot[]
   followers         Follow[]   @relation("Following")
   following         Follow[]   @relation("FollowedBy")
   reviewsGiven      Review[]   @relation("Reviewer")
@@ -402,11 +403,27 @@ model CollectionItem {
   cardImage     String?
   quantity      Int      @default(1)
   purchasePrice Float?
+  marketValue   Float?
   condition     String   @default("NM")
+  notes         String?
+  category      String?
   createdAt     DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  updatedAt     DateTime @updatedAt @default(now())
+  user          User     @relation(fields: [userId], references: [id])
   @@unique([userId, cardId])
   @@index([userId])
+}
+
+model CollectionValueSnapshot {
+  id          String   @id @default(cuid())
+  userId      String
+  totalValue  Float
+  totalCards  Int
+  uniqueCards Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+  @@index([userId, createdAt])
 }
 
 model Follow {

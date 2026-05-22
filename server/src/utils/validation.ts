@@ -91,15 +91,22 @@ export const addToCollectionSchema = z.object({
   cardId: z.string().min(1, "Card ID required"),
   cardName: z.string().min(1, "Card name required"),
   cardSet: z.string().optional(),
-  cardRarity: z.enum(["common", "uncommon", "rare", "mythic", "special"]).optional(),
-  cardImage: z.string().url("Invalid image URL").optional(),
+  cardRarity: z.string().optional(),
+  cardImage: z.string().optional(),
   quantity: z.coerce.number().int().min(1).default(1),
-  purchasePrice: z.coerce.number().positive("Purchase price must be positive").optional(),
-  condition: z.enum(["NM", "LP", "MP", "HP", "PO", "D"]).default("NM"),
+  purchasePrice: z.coerce.number().optional(),
+  marketValue: z.coerce.number().optional(),
+  condition: z.string().optional(),
+  notes: z.string().max(500).optional(),
+  category: z.string().optional(),
 });
 
 export const updateCollectionItemSchema = z.object({
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  quantity: z.coerce.number().int().min(0).optional(),
+  condition: z.string().optional(),
+  notes: z.string().max(500).optional(),
+  marketValue: z.coerce.number().optional(),
+  purchasePrice: z.coerce.number().optional(),
 });
 
 // Wanted card schemas
