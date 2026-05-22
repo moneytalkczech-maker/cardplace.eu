@@ -23,6 +23,12 @@ const CONDITION_COLOR: Record<string, string> = {
   PO: "text-red-400",
 };
 
+interface Snapshot {
+  createdAt: string;
+  totalValue: number;
+  totalCards: number;
+}
+
 interface CollectionCard {
   id: string;
   cardId: string;
@@ -57,6 +63,7 @@ function useCollection(userId?: string) {
     uniqueCards: 0,
     gainLoss: 0,
   });
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetch = () => {
@@ -65,13 +72,14 @@ function useCollection(userId?: string) {
     Promise.all([
       api.get(`/collection/${userId}`).then((r) => setItems(r.data)),
       api.get(`/collection/${userId}/value`).then((r) => setValue(r.data)),
+      api.get(`/collection/${userId}/snapshots`).then((r) => setSnapshots(r.data)),
     ])
       .catch(() => toast("error", t("collection.loadError")))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetch(); }, [userId]);
-  return { items, value, loading, refetch: fetch };
+  return { items, value, snapshots, loading, refetch: fetch };
 }
 
 export default function Collection() {
@@ -81,7 +89,7 @@ export default function Collection() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const userId = id || me?.id || "";
   const isMe = !id || id === me?.id;
-  const { items, value, loading, refetch } = useCollection(userId);
+  const { items, value, snapshots, loading, refetch } = useCollection(userId);
 
   const [showAdd, setShowAdd] = useState(false);
   const [cardSearch, setCardSearch] = useState("");
@@ -89,6 +97,7 @@ export default function Collection() {
   const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [purchasePrice, setPurchasePrice] = useState("");
+  const [marketValueAdd, setMarketValueAdd] = useState("");
   const [condition, setCondition] = useState("NM");
   const [notes, setNotes] = useState("");
 
@@ -97,6 +106,7 @@ export default function Collection() {
   const [filterCondition, setFilterCondition] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [chartGroupBy, setChartGroupBy] = useState<"rarity" | "set">("rarity");
+  const [chartView, setChartView] = useState<"breakdown" | "history">("breakdown");
   const [showChart, setShowChart] = useState(true);
 
   // Inline edit
@@ -126,6 +136,7 @@ export default function Collection() {
         cardImage: selectedCard.imageUrl,
         quantity,
         purchasePrice: purchasePrice || undefined,
+        marketValue: marketValueAdd || undefined,
         condition,
         notes: notes || undefined,
       });
@@ -135,6 +146,7 @@ export default function Collection() {
       setCardSearch("");
       setQuantity(1);
       setPurchasePrice("");
+      setMarketValueAdd("");
       setCondition("NM");
       setNotes("");
       toast("success", t("collection.addedSuccess"));
@@ -337,28 +349,51 @@ export default function Collection() {
               <BarChart2 className="h-4 w-4 text-[#00C8FF]" />
               {t("collection.valueChart")}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => setChartGroupBy("rarity")}
-                className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartGroupBy === "rarity" ? "bg-[rgba(0,200,255,0.15)] text-[#00C8FF]" : "text-gray-500 hover:text-white"}`}
+                onClick={() => setChartView("breakdown")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartView === "breakdown" ? "bg-[rgba(0,200,255,0.15)] text-[#00C8FF]" : "text-gray-500 hover:text-white"}`}
               >
-                {t("collection.byRarity")}
+                {t("collection.breakdown")}
               </button>
               <button
-                onClick={() => setChartGroupBy("set")}
-                className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartGroupBy === "set" ? "bg-[rgba(0,200,255,0.15)] text-[#00C8FF]" : "text-gray-500 hover:text-white"}`}
+                onClick={() => setChartView("history")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartView === "history" ? "bg-[rgba(0,200,255,0.15)] text-[#00C8FF]" : "text-gray-500 hover:text-white"}`}
               >
-                {t("collection.bySet")}
+                {t("collection.history")}
               </button>
+              {chartView === "breakdown" && (
+                <>
+                  <button
+                    onClick={() => setChartGroupBy("rarity")}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartGroupBy === "rarity" ? "bg-[rgba(167,255,0,0.12)] text-[#A7FF00]" : "text-gray-600 hover:text-gray-400"}`}
+                  >
+                    {t("collection.byRarity")}
+                  </button>
+                  <button
+                    onClick={() => setChartGroupBy("set")}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-heading transition-colors ${chartGroupBy === "set" ? "bg-[rgba(167,255,0,0.12)] text-[#A7FF00]" : "text-gray-600 hover:text-gray-400"}`}
+                  >
+                    {t("collection.bySet")}
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setShowChart((s) => !s)}
-                className="text-gray-500 hover:text-white transition-colors ml-2"
+                className="text-gray-500 hover:text-white transition-colors ml-1"
               >
                 <ChevronDown className={`h-4 w-4 transition-transform ${showChart ? "" : "rotate-180"}`} />
               </button>
             </div>
           </div>
-          {showChart && <CollectionChart items={items} groupBy={chartGroupBy} />}
+          {showChart && (
+            <CollectionChart
+              items={items}
+              groupBy={chartGroupBy}
+              snapshots={snapshots}
+              view={chartView}
+            />
+          )}
         </div>
       )}
 
@@ -416,26 +451,38 @@ export default function Collection() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.purchasePrice")}</label>
+                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.purchasePrice")} (Kč)</label>
                 <input
                   type="number"
                   className="input"
                   value={purchasePrice}
                   onChange={(e) => setPurchasePrice(e.target.value)}
                   placeholder="0"
+                  min="0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.notes")}</label>
+                <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.marketValue")} (Kč)</label>
                 <input
-                  type="text"
+                  type="number"
                   className="input"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t("collection.notesPlaceholder")}
-                  maxLength={200}
+                  value={marketValueAdd}
+                  onChange={(e) => setMarketValueAdd(e.target.value)}
+                  placeholder="0"
+                  min="0"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-heading font-semibold mb-1.5">{t("collection.notes")}</label>
+              <input
+                type="text"
+                className="input"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t("collection.notesPlaceholder")}
+                maxLength={200}
+              />
             </div>
             <button onClick={handleAdd} disabled={!selectedCard} className="btn-primary font-heading">
               {t("collection.addToCollection")}

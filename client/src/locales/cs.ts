@@ -519,6 +519,8 @@ const cs: Record<string, string> = {
   "collection.edit": "Upravit",
   "collection.saveEdit": "Uložit",
   "collection.marketValuePh": "Tržní cena (Kč)",
+  "collection.breakdown": "Rozložení",
+  "collection.history": "Vývoj hodnoty",
 
   // ForgotPassword
   "forgot.emailSent": "Email byl odeslán",

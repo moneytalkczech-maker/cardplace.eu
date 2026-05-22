@@ -519,6 +519,8 @@ const en: Record<string, string> = {
   "collection.edit": "Edit",
   "collection.saveEdit": "Save",
   "collection.marketValuePh": "Market price (CZK)",
+  "collection.breakdown": "Breakdown",
+  "collection.history": "Value history",
 
   // ForgotPassword
   "forgot.emailSent": "Email sent",
