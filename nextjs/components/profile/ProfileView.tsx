@@ -9,6 +9,14 @@ import {
   Sparkles, MessageSquare, Loader2,
 } from "lucide-react";
 import { users, auth as authApi, followApi, payments, monetizationApi } from "@/lib/api";
+import type { Auction, Bid, User } from "@/types";
+
+interface SimplePrices {
+  vipMonthly: number;
+  vipYearly: number;
+  verifiedPrice: number;
+  feePhase: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "@/components/ui/Toast";
 import RankBadge from "@/components/ui/RankBadge";
@@ -34,16 +42,16 @@ export default function ProfileView({ userId }: Props) {
   const { user: me, logout, token } = useAuthStore();
   const isMe = !userId || userId === me?.id;
 
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [tab, setTab] = useState<Tab>("auctions");
   const [loading, setLoading] = useState(true);
-  const [myAuctions, setMyAuctions] = useState<any[]>([]);
-  const [myBids, setMyBids] = useState<any[]>([]);
-  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [myAuctions, setMyAuctions] = useState<Auction[]>([]);
+  const [myBids, setMyBids] = useState<Bid[]>([]);
+  const [watchlist, setWatchlist] = useState<Auction[]>([]);
   const [referralCode, setReferralCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [prices, setPrices] = useState<any>(null);
+  const [prices, setPrices] = useState<SimplePrices | null>(null);
   const [vipLoading, setVipLoading] = useState(false);
   const [verifiedLoading, setVerifiedLoading] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -73,13 +81,13 @@ export default function ProfileView({ userId }: Props) {
 
     if (userId && userId !== me?.id) {
       users.getProfile(pid).then(setProfile).catch(() => toast("error", "Nepodařilo se načíst profil")).finally(() => setLoading(false));
-      if (token) followApi.check(pid).then((r: any) => setIsFollowing(r.following)).catch(() => {});
+      if (token) followApi.check(pid).then((r: { following: boolean }) => setIsFollowing(r.following)).catch(() => {});
       loadReviews(pid);
     } else if (token) {
       authApi.me().then((u) => { setProfile(u); }).catch(() => toast("error", "Nepodařilo se načíst profil")).finally(() => setLoading(false));
       users.getMyAuctions().then(setMyAuctions).catch(() => toast("error", "Nepodařilo se načíst aukce"));
       users.getMyBids().then(setMyBids).catch(() => toast("error", "Nepodařilo se načíst příhozy"));
-      users.getWatchlist().then((data: any) => setWatchlist(data.data || data || [])).catch(() => {});
+      users.getWatchlist().then(setWatchlist).catch(() => {});
       authApi.getReferralCode().then((r) => setReferralCode(r.code)).catch(() => {});
       monetizationApi.getPrices().then(setPrices).catch(() => {});
       loadReviews(pid);
@@ -193,7 +201,7 @@ export default function ProfileView({ userId }: Props) {
               <>
                 <button
                   onClick={async () => {
-                    const r: any = await followApi.toggle(userId);
+                    const r = await followApi.toggle(userId) as { following: boolean };
                     setIsFollowing(r.following);
                   }}
                   className={`btn text-sm font-heading ${isFollowing ? "btn-ghost text-[#00C8FF] border border-[rgba(0,200,255,0.3)]" : "btn-primary"}`}
@@ -238,7 +246,7 @@ export default function ProfileView({ userId }: Props) {
             { key: "reviews", icon: Star, label: "Recenze" },
             { key: "referral", icon: Gift, label: "Referral" },
             { key: "settings", icon: Sparkles, label: "Prémiové funkce" },
-          ] as { key: Tab; icon: any; label: string }[]).map((t) => {
+          ] as { key: Tab; icon: React.ComponentType<{ className?: string }>; label: string }[]).map((t) => {
             const Icon = t.icon;
             return (
               <button
@@ -277,7 +285,7 @@ export default function ProfileView({ userId }: Props) {
           </div>
         ) : (
           <div className="rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] divide-y divide-[rgba(0,200,255,0.06)]">
-            {myBids.map((bid: any) => {
+            {myBids.map((bid) => {
               const a = bid.auction;
               if (!a) return null;
               return (
@@ -312,7 +320,7 @@ export default function ProfileView({ userId }: Props) {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {watchlist.map((w: any) => <AuctionCardSimple key={w.id} auction={w.auction || w} />)}
+            {watchlist.map((w) => <AuctionCardSimple key={w.id} auction={w} />)}
           </div>
         )
       )}
@@ -547,7 +555,7 @@ function ReviewsSection({ reviews, loading, avgRating }: { reviews: Review[]; lo
   );
 }
 
-function AuctionCardSimple({ auction }: { auction: any }) {
+function AuctionCardSimple({ auction }: { auction: Auction }) {
   const now = new Date();
   const end = new Date(auction.endTime);
   const isEnded = end < now;

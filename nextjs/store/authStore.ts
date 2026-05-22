@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { auth, users, setApiToken } from "@/lib/api";
+import api from "@/lib/api";
 import type { User, Notification } from "@/types";
 
 const LOGGED_IN_KEY = "cardplace_logged_in";
@@ -32,6 +33,7 @@ interface AuthState {
   token: string | null;
   notifications: Notification[];
   unreadCount: number;
+  unreadMessages: number;
   loading: boolean;
   initialized: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -41,6 +43,7 @@ interface AuthState {
   tryRefreshToken: () => Promise<boolean>;
   fetchNotifications: () => Promise<void>;
   markNotificationsRead: () => Promise<void>;
+  fetchUnreadMessages: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -48,6 +51,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   notifications: [],
   unreadCount: 0,
+  unreadMessages: 0,
   loading: false,
   initialized: false,
 
@@ -71,7 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try { await auth.logout(); } catch { /* ignore */ }
     setLoggedInFlag(false);
     setApiToken(null);
-    set({ user: null, token: null, notifications: [], unreadCount: 0, initialized: false });
+    set({ user: null, token: null, notifications: [], unreadCount: 0, unreadMessages: 0, initialized: false });
   },
 
   tryRefreshToken: async () => {
@@ -127,5 +131,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set((state) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
     }));
+  },
+
+  fetchUnreadMessages: async () => {
+    try {
+      const data = await api.get("/messages/unread").then((r) => r.data as { count: number });
+      set({ unreadMessages: data.count ?? 0 });
+    } catch { /* ignore — non-critical */ }
   },
 }));

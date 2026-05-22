@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, Filter, SortAsc, Loader2, Gavel } from "lucide-react";
 import { auctions } from "@/lib/api";
+import { toast } from "@/components/ui/Toast";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Auction } from "@/types";
@@ -119,8 +120,8 @@ export default function AuctionsPage() {
         setItems((prev) => [...prev, ...(data.data || [])]);
       }
       setCursor(data.nextCursor);
-    } catch {
-      // ignore
+    } catch (err: any) {
+      if (reset) toast("error", err.response?.data?.error || "Nepodařilo se načíst aukce");
     } finally {
       setLoading(false);
       setLoadingMore(false);

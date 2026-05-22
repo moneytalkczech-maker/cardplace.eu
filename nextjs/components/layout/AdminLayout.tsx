@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
-interface NavItem { path: string; label: string; icon: any; exact?: boolean; }
+interface NavItem { path: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean; }
 interface NavGroup { label: string; items: NavItem[]; }
 
 const NAV_GROUPS: NavGroup[] = [

@@ -16,7 +16,7 @@ interface CardDetail {
   priceEbayAvg: number | null; priceEbayMedian: number | null; priceEbayLastSold: number | null;
   currency: string | null; pricesUpdatedAt: string | null;
   set: { id: string; name: string; slug: string; category: string; brand: string | null; year: string | null };
-  priceSnapshots: any[];
+  priceSnapshots: { recordedAt: string; priceCardmarketAvg: number | null; priceEbayAvg: number | null }[];
 }
 
 export default function CardDetailClient() {
@@ -154,7 +154,7 @@ export default function CardDetailClient() {
             <div className="mt-8 rounded-xl border border-[rgba(0,200,255,0.1)] bg-[#0B1220] p-5">
               <h2 className="font-heading font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Vývoj ceny</h2>
               <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={card.priceSnapshots.map((s: any) => ({
+                <LineChart data={card.priceSnapshots.map((s) => ({
                   date: new Date(s.recordedAt).toLocaleDateString("cs-CZ", { month: "short", day: "numeric" }),
                   CM: s.priceCardmarketAvg ?? undefined,
                   eBay: s.priceEbayAvg ?? undefined,

@@ -37,7 +37,7 @@ export default function CardSetDetailPage() {
   useEffect(() => {
     if (!setSlug) return;
     api.get("/card-sets").then((r) => {
-      const found = r.data.find((s: any) => s.slug === setSlug);
+      const found = r.data.find((s: { slug: string; id: string }) => s.slug === setSlug);
       if (found) {
         api.get(`/card-sets/${found.id}`).then((r2) => setSet(r2.data)).finally(() => setLoading(false));
       } else {

@@ -25,7 +25,7 @@ const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password
 
 export default function Navbar() {
   const { t, locale, setLocale } = useTranslation();
-  const { user, token, logout, fetchNotifications } = useAuthStore();
+  const { user, token, logout, fetchNotifications, fetchUnreadMessages, unreadMessages } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,15 +44,19 @@ export default function Navbar() {
   useEffect(() => {
     if (!token) return;
     fetchNotifications();
+    fetchUnreadMessages();
     const unsub = onOutbid(() => { fetchNotifications(); });
     return () => unsub();
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchUnreadMessages();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [token, fetchNotifications]);
+  }, [token, fetchNotifications, fetchUnreadMessages]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -203,6 +207,11 @@ export default function Navbar() {
                           </Link>
                           <Link href="/messages" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                             <MessageSquare className="h-4 w-4" /> Zprávy
+                            {unreadMessages > 0 && (
+                              <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF3366] text-[10px] font-bold text-white px-1">
+                                {unreadMessages > 9 ? "9+" : unreadMessages}
+                              </span>
+                            )}
                           </Link>
                           <Link href="/scan" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-[rgba(255,255,255,0.06)] transition-colors">
                             <Scan className="h-4 w-4" /> {t("nav.scan")}

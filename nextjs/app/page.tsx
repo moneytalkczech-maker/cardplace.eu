@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { TrendingUp, Zap, Clock, Shield, Sparkles, ArrowRight, Gavel, Award, Users, CheckCircle } from "lucide-react";
 import type { Auction } from "@/types";
 
@@ -228,12 +229,14 @@ function AuctionCardSimple({ auction }: { auction: Auction }) {
 
   return (
     <Link href={`/auctions/${auction.id}`} className="card group block hover:border-[rgba(0,200,255,0.2)] hover:shadow-card-hover transition-all">
-      <div className="aspect-square rounded-lg overflow-hidden bg-[rgba(0,200,255,0.04)] mb-3">
+      <div className="aspect-square rounded-lg overflow-hidden bg-[rgba(0,200,255,0.04)] mb-3 relative">
         {auction.imageUrl ? (
-          <img
+          <Image
             src={auction.imageUrl}
             alt={auction.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">🃏</div>

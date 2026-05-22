@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { auctions, upload } from "@/lib/api";
 import { searchCards } from "@/lib/CardsDB";
+import type { MarketCard } from "@/lib/CardsDB";
 import { toast } from "@/components/ui/Toast";
 
 const CONDITIONS = [
@@ -34,8 +35,8 @@ function CreateAuctionContent() {
   });
 
   const [cardSearch, setCardSearch] = useState("");
-  const [cardResults, setCardResults] = useState<any[]>([]);
-  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [cardResults, setCardResults] = useState<MarketCard[]>([]);
+  const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [imageTab, setImageTab] = useState<"upload" | "url">("upload");
@@ -55,7 +56,7 @@ function CreateAuctionContent() {
     return () => { clearTimeout(timer); cancelled = true; };
   }, [cardSearch]);
 
-  const selectCard = (card: any) => {
+  const selectCard = (card: MarketCard) => {
     setSelectedCard(card);
     setForm((f) => ({ ...f, cardId: card.id, title: card.name }));
     setCardSearch("");

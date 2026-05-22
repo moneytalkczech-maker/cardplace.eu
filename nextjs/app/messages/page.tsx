@@ -43,7 +43,7 @@ function Avatar({ user, size = "md" }: { user: ConvoUser; size?: "sm" | "md" }) 
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, token } = useAuthStore();
+  const { user, token, fetchUnreadMessages } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -84,7 +84,8 @@ function MessagesContent() {
   useEffect(() => {
     if (!token) { router.push("/login?from=/messages"); return; }
     fetchConversations();
-  }, [token, fetchConversations, router]);
+    fetchUnreadMessages();
+  }, [token, fetchConversations, fetchUnreadMessages, router]);
 
   // Open conversation from URL param (?with=userId)
   useEffect(() => {
@@ -113,7 +114,8 @@ function MessagesContent() {
     setConversations((prev) =>
       prev.map((c) => (c.id === activeId ? { ...c, unreadCount: 0 } : c))
     );
-  }, [activeId, loadMessages]);
+    fetchUnreadMessages();
+  }, [activeId, loadMessages, fetchUnreadMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

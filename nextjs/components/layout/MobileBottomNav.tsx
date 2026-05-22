@@ -20,7 +20,7 @@ const authLinks = [
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { token } = useAuthStore();
+  const { token, unreadMessages } = useAuthStore();
 
   if (AUTH_ROUTES.some((r) => pathname.startsWith(r))) return null;
   if (pathname.startsWith("/admin")) return null;
@@ -57,7 +57,14 @@ export default function MobileBottomNav() {
                   <Icon className={`h-5 w-5 ${active ? "text-[#050A12]" : "text-[#A7FF00]"}`} />
                 </div>
               ) : (
-                <Icon className={`h-5 w-5 ${active ? "" : ""}`} />
+                <div className="relative">
+                  <Icon className="h-5 w-5" />
+                  {path === "/profile" && unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-[#FF3366] text-[8px] font-bold text-white px-0.5">
+                      {unreadMessages > 9 ? "9+" : unreadMessages}
+                    </span>
+                  )}
+                </div>
               )}
               <span className={`text-[10px] font-heading font-semibold ${isScan ? "mt-1" : ""}`}>
                 {label}
